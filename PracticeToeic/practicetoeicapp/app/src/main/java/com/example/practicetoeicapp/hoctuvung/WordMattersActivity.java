@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -24,30 +22,30 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.R;
+import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.luyennghe.MediaPlayerUtils;
 import com.example.practicetoeicapp.taikhoan.User;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class WordMattersActivity extends AppCompatActivity {
 
-
-    final  String DATABASE_NAME = "HocNgonNgu.db";
+    final String DATABASE_NAME = "HocNgonNgu.db";
     SQLiteDatabase database;
     DatabaseAccess DB;
 
     private int presCounter = 0;
     private String[] keys = {"a", "b", "c", "d", "e", "f", "g",
-            //"h", "i", "j", "k", "l", "m", "n",
-            //"o", "p", "q", "r", "s", "t", "u",
             "v", "w", "x", "y", "z"};
-    
+
     private MediaPlayer mediaPlayer;
-    String URL = "https://github.com/duchmdev/huynhminhduc_assets_android_firebase_project_study_english/raw/main/LuyenNghe/Hey%20Mama%20-%20David%20Guetta%20feat_%20Nicki%20Mina.mp3";
+    String URL = "";
     String UL = "hello";
 
     private String textAnswer = "ENGLISH";
@@ -63,8 +61,10 @@ public class WordMattersActivity extends AppCompatActivity {
     private int score = 0;
     private int dem;
     private int tu = 1;
+    private QuestionRepository repository;
     User user;
     Animation smalltobig;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,35 +72,58 @@ public class WordMattersActivity extends AppCompatActivity {
         smalltobig = AnimationUtils.loadAnimation(WordMattersActivity.this, R.anim.smalltobig);
 
         DB = DatabaseAccess.getInstance(getApplicationContext());
+        repository = QuestionRepository.getInstance();
         AnhXa();
         LayUser();
 
         Intent intent = getIntent();
-        idbo = intent.getIntExtra("idbo",0);
+        idbo = intent.getIntExtra("idbo", 0);
         DStuvung = new ArrayList<>();
+        loadTuVung();
+    }
 
-        AddArrayTV();
+    private void loadTuVung() {
+        repository.loadTuVung(idbo, new QuestionRepository.DataCallback<List<TuVung>>() {
+            @Override
+            public void onSuccess(List<TuVung> data) {
+                DStuvung.clear();
+                DStuvung.addAll(data);
+                if (DStuvung.isEmpty()) {
+                    Toast.makeText(WordMattersActivity.this,
+                            "Nội dung sẽ cập nhật cập nhật trong thời gian sớm nhất! Mong mọi người thông càm!!",
+                            Toast.LENGTH_LONG).show();
+                    finish();
+                    startActivity(new Intent(WordMattersActivity.this, HocTuVungActivity.class));
+                } else {
+                    startWordGame();
+                }
+            }
 
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(WordMattersActivity.this,
+                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
-        // Create MediaPlayer.
-        mediaPlayer=  new MediaPlayer();
+    private void startWordGame() {
+        mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
-            public void onPrepared(MediaPlayer mp) {mp.start();}
+            public void onPrepared(MediaPlayer mp) {
+                mp.start();
+            }
         });
 
-
-        Bitmap img= BitmapFactory.decodeByteArray(DStuvung.get(0).getAnh(),0,DStuvung.get(0).getAnh().length);
-        imgview.setImageBitmap(img);
-        imgview.startAnimation(smalltobig);
-        textQuestion.setText("("+DStuvung.get(0).getLoaitu()+") - " + "("+DStuvung.get(0).getDichnghia()+")");
+        showWord(0);
+        textQuestion.setText("(" + DStuvung.get(0).getLoaitu() + ") - " + "(" + DStuvung.get(0).getDichnghia() + ")");
         tvWordCount.setText("Word: " + tu + "/" + DStuvung.size());
         tvScore.setText("Score: " + score);
 
         textAnswer = DStuvung.get(0).getDapan();
         URL = DStuvung.get(0).getAudio();
-
 
         smallbigforth = AnimationUtils.loadAnimation(this, R.anim.smallbigforth);
 
@@ -111,31 +134,26 @@ public class WordMattersActivity extends AppCompatActivity {
         keys = shuffleArray(keys);
 
         dem = 0;
-        while (dem<keys.length)
-        {
+        while (dem < keys.length) {
             if (dem < 4) {
                 addView(((LinearLayout) findViewById(R.id.layoutParent1)), keys[dem], ((EditText) findViewById(R.id.editText)));
-            }
-            else if (dem <8)
-            {
+            } else if (dem < 8) {
                 addView(((LinearLayout) findViewById(R.id.layoutParent2)), keys[dem], ((EditText) findViewById(R.id.editText)));
+            } else {
+                addView(((LinearLayout) findViewById(R.id.layoutParent3)), keys[dem], ((EditText) findViewById(R.id.editText)));
             }
-            else addView(((LinearLayout) findViewById(R.id.layoutParent3)), keys[dem], ((EditText) findViewById(R.id.editText)));
             dem++;
         }
 
-        // When the video file ready for playback.
         ListenTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // http://example.coom/mysong.mp3
-                //String mediaURL = MediaPlayerUtils.URL_MEDIA_SAMPLE;
                 doStop();
-                if (UL == URL)  MediaPlayerUtils.playURLMedia(WordMattersActivity.this, mediaPlayer, UL);
-                else {
-                    String mediaURL = URL;
+                if (UL.equals(URL)) {
+                    MediaPlayerUtils.playURLMedia(WordMattersActivity.this, mediaPlayer, UL);
+                } else {
                     UL = URL;
-                    MediaPlayerUtils.playURLMedia(WordMattersActivity.this, mediaPlayer, mediaURL);
+                    MediaPlayerUtils.playURLMedia(WordMattersActivity.this, mediaPlayer, URL);
                 }
             }
         });
@@ -144,35 +162,35 @@ public class WordMattersActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finish();
-                Intent intent
-                        = new Intent(WordMattersActivity.this,
-                        HocTuVungActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(WordMattersActivity.this, HocTuVungActivity.class));
             }
         });
-
 
         maxPresCounter = textAnswer.length();
     }
 
-    private  void AnhXa()
-    {
-        textQuestion = (TextView) findViewById(R.id.textQuestion);
-        imgview = (ImageView) findViewById(R.id.imgview);
-        textScreen = (TextView) findViewById(R.id.textScreen);
-        textTitle = (TextView) findViewById(R.id.textTitle);
-        tvWordCount = (TextView) findViewById(R.id.tvWord);
-        tvScore = (TextView) findViewById(R.id.tvScore);
-        ListenTV = (ImageButton) findViewById(R.id.ListenTuVung);
-        btnquit = (Button) findViewById(R.id.btnQuitHTV);
-
-
+    private void showWord(int position) {
+        Glide.with(this)
+                .load(DStuvung.get(position).getAnhUrl())
+                .into(imgview);
+        imgview.startAnimation(smalltobig);
     }
 
-    public void LayUser()
-    {
+    private void AnhXa() {
+        textQuestion = findViewById(R.id.textQuestion);
+        imgview = findViewById(R.id.imgview);
+        textScreen = findViewById(R.id.textScreen);
+        textTitle = findViewById(R.id.textTitle);
+        tvWordCount = findViewById(R.id.tvWord);
+        tvScore = findViewById(R.id.tvScore);
+        ListenTV = findViewById(R.id.ListenTuVung);
+        btnquit = findViewById(R.id.btnQuitHTV);
+    }
+
+    public void LayUser() {
         database = Database.initDatabase(WordMattersActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE ID_User = ?",new String[]{String.valueOf(DB.iduser)});
+        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE ID_User = ?",
+                new String[]{String.valueOf(DB.iduser)});
         cursor.moveToNext();
         String Iduser = cursor.getString(0);
         String HoTen = cursor.getString(1);
@@ -180,29 +198,8 @@ public class WordMattersActivity extends AppCompatActivity {
         String Email = cursor.getString(3);
         String SDT = cursor.getString(4);
         int Role = cursor.getInt(5);
-        user = new User(Iduser,HoTen,Point,Email,SDT,Role);
+        user = new User(Iduser, HoTen, Point, Email, SDT, Role);
     }
-
-
-    private void AddArrayTV(){
-        database = Database.initDatabase(WordMattersActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM TuVung WHERE ID_Bo = ?",new String[]{String.valueOf(idbo)});
-        DStuvung.clear();
-
-        for (int i = 0; i < cursor.getCount(); i++){
-            cursor.moveToPosition(i);
-            int idtu = cursor.getInt(0);
-            int idbo = cursor.getInt(1);
-            String dapan = cursor.getString(2);
-            String dichnghia = cursor.getString(3);
-            String loaitu = cursor.getString(4);
-            String audio = cursor.getString(5);
-            byte[] anh = cursor.getBlob(6);
-
-            DStuvung.add(new TuVung(idtu,idbo,dapan,dichnghia,loaitu,audio,anh));
-        }
-    }
-
 
     private String[] shuffleArray(String[] ar) {
         Random rnd = new Random();
@@ -214,7 +211,6 @@ public class WordMattersActivity extends AppCompatActivity {
         }
         return ar;
     }
-
 
     private void addView(LinearLayout viewParent, final String text, final EditText editText) {
         LinearLayout.LayoutParams linearLayoutParams = new LinearLayout.LayoutParams(
@@ -248,7 +244,7 @@ public class WordMattersActivity extends AppCompatActivity {
             @SuppressLint("SetTextI18n")
             @Override
             public void onClick(View v) {
-                if(presCounter < maxPresCounter) {
+                if (presCounter < maxPresCounter) {
                     if (presCounter == 0)
                         editText.setText("");
 
@@ -266,7 +262,6 @@ public class WordMattersActivity extends AppCompatActivity {
         viewParent.addView(textView);
     }
 
-
     private void doValidate() {
         presCounter = 0;
 
@@ -275,40 +270,34 @@ public class WordMattersActivity extends AppCompatActivity {
         LinearLayout linearLayout2 = findViewById(R.id.layoutParent2);
         LinearLayout linearLayout3 = findViewById(R.id.layoutParent3);
 
-        if(editText.getText().toString().equals(textAnswer)) {
-            if(tu == DStuvung.size())
-            {
-                score +=5;
-                DB.capnhatdiem(DB.iduser,user.getPoint(),score);
+        if (editText.getText().toString().equals(textAnswer)) {
+            if (tu == DStuvung.size()) {
+                score += 5;
+                DB.capnhatdiem(DB.iduser, user.getPoint(), score);
                 Toast.makeText(WordMattersActivity.this, "Hoàn Thành Xuất Sắc!!~(^.^)~", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(WordMattersActivity.this, FinishHTVActivity.class);
-                intent.putExtra("score",score);
+                intent.putExtra("score", score);
                 intent.putExtra("questiontrue", tu);
                 intent.putExtra("qcount", DStuvung.size());
                 startActivity(intent);
                 finish();
-            }
-            else {
-                if(tu > 0) doStop();
+            } else {
+                if (tu > 0) doStop();
                 Toast.makeText(WordMattersActivity.this, "Chính xác!!(^.^)", Toast.LENGTH_SHORT).show();
-                Bitmap img= BitmapFactory.decodeByteArray(DStuvung.get(tu).getAnh(),0,DStuvung.get(tu).getAnh().length);
-                imgview.setImageBitmap(img);
-                imgview.startAnimation(smalltobig);
-                textQuestion.setText("("+DStuvung.get(tu).getLoaitu()+") - " + "("+DStuvung.get(tu).getDichnghia()+")");
+                showWord(tu);
+                textQuestion.setText("(" + DStuvung.get(tu).getLoaitu() + ") - " + "(" + DStuvung.get(tu).getDichnghia() + ")");
                 textAnswer = DStuvung.get(tu).getDapan();
                 URL = DStuvung.get(tu).getAudio();
-                for (int i = 0; i < textAnswer.length(); i++)
-                {
+                for (int i = 0; i < textAnswer.length(); i++) {
                     keys[i] = String.valueOf(textAnswer.charAt(i));
                 }
                 maxPresCounter = textAnswer.length();
                 editText.setText("");
-                score +=5;
+                score += 5;
                 tu++;
                 tvWordCount.setText("Word: " + tu + "/" + DStuvung.size());
                 tvScore.setText("Score: " + score);
             }
-
         } else {
             Toast.makeText(WordMattersActivity.this, "Sai rồi!!(T.T)", Toast.LENGTH_SHORT).show();
             editText.setText("");
@@ -320,25 +309,24 @@ public class WordMattersActivity extends AppCompatActivity {
         linearLayout3.removeAllViews();
 
         dem = 0;
-        while (dem<keys.length)
-        {
+        while (dem < keys.length) {
             if (dem < 4) {
                 addView(linearLayout1, keys[dem], editText);
-            }
-            else if (dem < 8)
-            {
+            } else if (dem < 8) {
                 addView(linearLayout2, keys[dem], editText);
+            } else {
+                addView(linearLayout3, keys[dem], editText);
             }
-            else addView(linearLayout3, keys[dem], editText);
             dem++;
         }
     }
 
-    private void doStop()  {
-        if(mediaPlayer.isPlaying()) {
+    private void doStop() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
         }
-        mediaPlayer.reset();
+        if (mediaPlayer != null) {
+            mediaPlayer.reset();
+        }
     }
-
 }

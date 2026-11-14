@@ -1,8 +1,6 @@
 package com.example.practicetoeicapp.hoctuvung;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.R;
 
 import java.util.List;
@@ -70,8 +69,9 @@ public class DSTuVungAdapter  extends BaseAdapter {
         TuVung tuVung = dstuvungs.get(position);
         holder.twDichNghia.setText(tuVung.getDichnghia());
         holder.twTuVung.setText(tuVung.getDapan() +"("+tuVung.getLoaitu()+"):");
-        Bitmap img= BitmapFactory.decodeByteArray(tuVung.getAnh(),0,tuVung.getAnh().length);
-        holder.imgHinh.setImageBitmap(img);
+        Glide.with(context)
+                .load(tuVung.getAnhUrl())
+                .into(holder.imgHinh);
         return convertView;
 
 

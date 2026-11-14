@@ -1,12 +1,9 @@
 package com.example.practicetoeicapp.admin.bohoctap;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,20 +14,20 @@ import android.widget.Toast;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.bohoctap.BoHocTap;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.QuestionRepository;
 
 import java.util.ArrayList;
-
-
+import java.util.List;
 
 public class AdminBoHocTapAdapter extends BaseAdapter {
-    private Context context;
-    private ArrayList<BoHocTap> list;
-    SQLiteDatabase database;
+    private final Context context;
+    private final ArrayList<BoHocTap> list;
+    private final QuestionRepository repository;
 
     public AdminBoHocTapAdapter(Context context, ArrayList<BoHocTap> list) {
         this.context = context;
         this.list = list;
+        this.repository = QuestionRepository.getInstance();
     }
 
     @Override
@@ -40,23 +37,23 @@ public class AdminBoHocTapAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return null;
+        return list.get(position);
     }
 
     @Override
     public long getItemId(int position) {
-        return 0;
+        return position;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.row_bohoctap, null);
-        TextView txtTenBo = (TextView) view.findViewById(R.id.tvTenBo);
-        ImageView imgEdit = (ImageView) view.findViewById(R.id.imgEditBHT);
-        ImageView imgDelete = (ImageView) view.findViewById(R.id.imgDeleteBHT);
+        TextView txtTenBo = view.findViewById(R.id.tvTenBo);
+        ImageView imgEdit = view.findViewById(R.id.imgEditBHT);
+        ImageView imgDelete = view.findViewById(R.id.imgDeleteBHT);
         BoHocTap bht = list.get(position);
-        txtTenBo.setText(bht.getTenBo() + "");
+        txtTenBo.setText(bht.getTenBo());
         imgEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -68,98 +65,48 @@ public class AdminBoHocTapAdapter extends BaseAdapter {
         imgDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle("Xác nhận xóa");
-                builder.setMessage("Bạn chắc chắn muốn xóa bộ học tập này?");
-                builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Boolean result = deleteBoHocTap(bht.getIdBo());
-                        list.clear();
-                        if (result == true) {
-                            Toast.makeText(context, "Xóa thành công", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            Toast.makeText(context, "Xóa thất bại", Toast.LENGTH_SHORT).show();
-                        }
-                        list = getBoHocTap();
-                        notifyDataSetChanged();
-                    }
-                });
-                builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                new AlertDialog.Builder(context)
+                        .setTitle("Xác nhận xóa")
+                        .setMessage("Bạn chắc chắn muốn xóa bộ học tập này?")
+                        .setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                repository.deleteBoHocTap(bht.getIdBo(),
+                                        new QuestionRepository.DataCallback<Void>() {
+                                            @Override
+                                            public void onSuccess(Void data) {
+                                                Toast.makeText(context, "Xóa thành công", Toast.LENGTH_SHORT).show();
+                                                reload();
+                                            }
 
-                    }
-                });
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                                            @Override
+                                            public void onError(Exception e) {
+                                                Toast.makeText(context, "Xóa thất bại", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                            }
+                        })
+                        .setNegativeButton("Không", null)
+                        .create()
+                        .show();
             }
         });
         return view;
     }
 
-    private Boolean deleteBoHocTap(int id) {
-        database = Database.initDatabase((Activity)context, "HocNgonNgu.db");
+    private void reload() {
+        repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
+            @Override
+            public void onSuccess(List<BoHocTap> data) {
+                list.clear();
+                list.addAll(data);
+                notifyDataSetChanged();
+            }
 
-//
-//        Cursor cursorBoCauHoi = database.rawQuery("SELECT * FROM DienKhuyet WHERE ID_Bo=?", new String[] {String.valueOf(id)});
-//        if(cursorBoCauHoi.getCount()>0){
-//            //delete all data bind with id_bo on table DienKHuyet
-//            database.delete("DienKhuyet", "ID_Bo = ?", new String[]{String.valueOf(id)});
-//        }
-//        cursorBoCauHoi.close();
-//
-//
-//        Cursor cursorLuyenNghe = database.rawQuery("SELECT * FROM LuyenNghe WHERE ID_Bo=?", new String[] {String.valueOf(id)});
-//        if(cursorLuyenNghe.getCount()>0){
-//            //delete all data bind with id_bo on table LuyenNghe
-//            database.delete("LuyenNghe", "ID_Bo = ?", new String[]{String.valueOf(id)});
-//        }
-//        cursorLuyenNghe.close();
-//
-//        Cursor cursorSapXepCau = database.rawQuery("SELECT * FROM SapXepCau WHERE ID_Bo=?", new String[] {String.valueOf(id)});
-//        if(cursorSapXepCau.getCount()>0){
-//            //delete all data bind with id_bo on table SapXepCau
-//            database.delete("SapXepCau", "ID_Bo = ?", new String[]{String.valueOf(id)});
-//        }
-//        cursorSapXepCau.close();
-//
-//        Cursor cursorTracNghiem = database.rawQuery("SELECT * FROM TracNghiem WHERE ID_Bo=?", new String[] {String.valueOf(id)});
-//        if(cursorTracNghiem.getCount()>0){
-//            //delete all data bind with id_bo on table TracNghiem
-//            database.delete("TracNghiem", "ID_Bo = ?", new String[]{String.valueOf(id)});
-//        }
-//        cursorTracNghiem.close();
-//
-//        Cursor cursorTuVung = database.rawQuery("SELECT * FROM TuVung WHERE ID_Bo=?", new String[] {String.valueOf(id)});
-//        if(cursorTuVung.getCount()>0){
-//            //delete all data bind with id_bo on table TuVung
-//            database.delete("TuVung", "ID_Bo = ?", new String[]{String.valueOf(id)});
-//        }
-//        cursorTuVung.close();
-
-
-        long result = database.delete("BoCauHoi", "ID_Bo = ?", new String[]{String.valueOf(id)});
-        if (result == 0) {
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-
-    private ArrayList<BoHocTap> getBoHocTap() {
-        ArrayList<BoHocTap> listBHT = new ArrayList<>();
-        database = Database.initDatabase((Activity)context, "HocNgonNgu.db");
-        Cursor cursor = database.rawQuery("SELECT * FROM BoCauHoi", null);
-        for (int i = 0; i < cursor.getCount(); i++) {
-            cursor.moveToPosition(i);
-            int idbo = cursor.getInt(0);
-            int  stt = cursor.getInt(1);
-            String tenbo = cursor.getString(2);
-            listBHT.add(new BoHocTap(idbo, stt, tenbo));
-        }
-        return listBHT;
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(context, "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

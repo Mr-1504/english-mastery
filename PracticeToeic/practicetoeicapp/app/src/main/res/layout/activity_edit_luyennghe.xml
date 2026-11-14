@@ -103,6 +103,19 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/btnChonHinhEditLN" />
 
+            <Button
+                android:id="@+id/btnChonAudioEditLN"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:backgroundTint="#fece2f"
+                android:fontFamily="@font/bungee"
+                android:text="Chọn audio"
+                android:textColor="#000"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edtAudioEditLN" />
+
             <Spinner
                 android:id="@+id/spnDapAnTrueEditLN"
                 android:layout_width="100dp"
@@ -112,7 +125,7 @@
                 android:layout_marginRight="112dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/edtAudioEditLN"
+                app:layout_constraintTop_toBottomOf="@+id/btnChonAudioEditLN"
                 app:layout_constraintVertical_bias="0.0" />
 
             <TextView

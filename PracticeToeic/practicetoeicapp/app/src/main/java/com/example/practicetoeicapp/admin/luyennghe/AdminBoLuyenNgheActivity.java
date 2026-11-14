@@ -1,13 +1,12 @@
 package com.example.practicetoeicapp.admin.luyennghe;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,30 +14,30 @@ import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.bohoctap.BoHocTap;
 import com.example.practicetoeicapp.bohoctap.BoHocTapAdapter;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.QuestionRepository;
 
 import java.util.ArrayList;
-
+import java.util.List;
 
 public class AdminBoLuyenNgheActivity extends AppCompatActivity {
-    final String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
     ImageView imgBack;
     ArrayList<BoHocTap> listBoLuyenNghe;
     BoHocTapAdapter adapter;
     ListView lvBoLuyenNghe;
-    int idbo;
+    QuestionRepository repository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_boluyennghe);
-        lvBoLuyenNghe = (ListView) findViewById(R.id.listviewAdminBLN);
-        imgBack = (ImageView) findViewById(R.id.imgBackAdminBLN);
+        lvBoLuyenNghe = findViewById(R.id.listviewAdminBLN);
+        imgBack = findViewById(R.id.imgBackAdminBLN);
+        repository = QuestionRepository.getInstance();
         listBoLuyenNghe = new ArrayList<>();
-        getBoLuyenNghe();
-        adapter = new BoHocTapAdapter(AdminBoLuyenNgheActivity.this, R.layout.row_boluyennghe, listBoLuyenNghe);
+        adapter = new BoHocTapAdapter(AdminBoLuyenNgheActivity.this,
+                R.layout.row_boluyennghe, listBoLuyenNghe);
         lvBoLuyenNghe.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
+        loadBoLuyenNghe();
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -48,24 +47,27 @@ public class AdminBoLuyenNgheActivity extends AppCompatActivity {
         lvBoLuyenNghe.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                idbo = listBoLuyenNghe.get(position).getIdBo();
                 Intent intent = new Intent(AdminBoLuyenNgheActivity.this, AdminLuyenNgheActivity.class);
-                intent.putExtra("idBoLuyenNghe", idbo);
+                intent.putExtra("idBoLuyenNghe", listBoLuyenNghe.get(position).getIdBo());
                 startActivity(intent);
             }
         });
     }
 
-    private void getBoLuyenNghe() {
-        database = Database.initDatabase(AdminBoLuyenNgheActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM BoCauHoi", null);
-        listBoLuyenNghe.clear();
-        for (int i = 0; i < cursor.getCount(); i++) {
-            cursor.moveToPosition(i);
-            int id = cursor.getInt(0);
-            int stt = cursor.getInt(1);
-            String ten = cursor.getString(2);
-            listBoLuyenNghe.add(new BoHocTap(id, stt, ten));
-        }
+    private void loadBoLuyenNghe() {
+        repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
+            @Override
+            public void onSuccess(List<BoHocTap> data) {
+                listBoLuyenNghe.clear();
+                listBoLuyenNghe.addAll(data);
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(AdminBoLuyenNgheActivity.this,
+                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

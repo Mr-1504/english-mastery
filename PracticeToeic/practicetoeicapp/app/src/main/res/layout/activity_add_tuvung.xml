@@ -127,6 +127,19 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/edtNghiaAddTV" />
 
+            <Button
+                android:id="@+id/btnChonAudioAddTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:backgroundTint="#fece2f"
+                android:fontFamily="@font/bungee"
+                android:text="Chọn audio"
+                android:textColor="#000"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edtAudioAddTV" />
+
             <Spinner
                 android:id="@+id/spnLoaiTuAddTV"
                 android:layout_width="0dp"
@@ -135,7 +148,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/edtAudioAddTV" />
+                app:layout_constraintTop_toBottomOf="@+id/btnChonAudioAddTV" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

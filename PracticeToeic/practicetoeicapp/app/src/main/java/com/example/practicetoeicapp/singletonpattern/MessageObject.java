@@ -57,12 +57,7 @@ public class MessageObject {
         else txt_name.setText("ERROR");
         txt_message.setText(message);
 
-        btn_oke.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+        btn_oke.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 }

@@ -76,7 +76,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
-            android:text="Ứng Dụng Học Ngôn Ngữ SunnySky"
+            android:text="Ứng Dụng Học Tiếng Anh Mèn mén"
             android:textColor="@color/textHeadline"
             android:textSize="20sp" />
 

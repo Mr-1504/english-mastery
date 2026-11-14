@@ -1,44 +1,42 @@
 package com.example.practicetoeicapp.admin.sapxepcau;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.sapxepcau.CauSapXep;
 
 import java.util.ArrayList;
-
+import java.util.List;
 
 public class AdminSapXepCauActivity extends AppCompatActivity {
-    final String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
     ImageView imgBack, imgAdd;
     ArrayList<CauSapXep> listSapXepCau;
     AdminSapXepCauAdapter adapter;
     ListView lvSapXepCau;
+    QuestionRepository repository;
     int idbo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_sapxepcau);
-        Intent idIntent = getIntent();
-        idbo = idIntent.getIntExtra("idBoSapXepCau", 0);
-        lvSapXepCau = (ListView) findViewById(R.id.listviewAdminSXC);
-        imgBack = (ImageView) findViewById(R.id.imgBackAdminSXC);
-        imgAdd = (ImageView) findViewById(R.id.imgAddAdminSXC);
+        idbo = getIntent().getIntExtra("idBoSapXepCau", 0);
+        lvSapXepCau = findViewById(R.id.listviewAdminSXC);
+        imgBack = findViewById(R.id.imgBackAdminSXC);
+        imgAdd = findViewById(R.id.imgAddAdminSXC);
+        repository = QuestionRepository.getInstance();
         listSapXepCau = new ArrayList<>();
-        getSapXepCau();
         adapter = new AdminSapXepCauAdapter(AdminSapXepCauActivity.this, listSapXepCau);
         lvSapXepCau.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
+        loadSapXepCau();
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -55,20 +53,20 @@ public class AdminSapXepCauActivity extends AppCompatActivity {
         });
     }
 
-    private void getSapXepCau() {
-        database = Database.initDatabase(AdminSapXepCauActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM SapXepCau WHERE IDBo = ?", new String[]{String.valueOf(idbo)});
-        listSapXepCau.clear();
-        for (int i = 0; i < cursor.getCount(); i++){
-            cursor.moveToPosition(i);
-            int idcau = cursor.getInt(0);
-            int idbo = cursor.getInt(1);
-            String dapan = cursor.getString(2);
-            String part1 = cursor.getString(3);
-            String part2 = cursor.getString(4);
-            String part3 = cursor.getString(5);
-            String part4 = cursor.getString(6);
-            listSapXepCau.add(new CauSapXep(idcau, idbo, dapan, part1, part2, part3, part4));
-        }
+    private void loadSapXepCau() {
+        repository.loadSapXepCau(idbo, new QuestionRepository.DataCallback<List<CauSapXep>>() {
+            @Override
+            public void onSuccess(List<CauSapXep> data) {
+                listSapXepCau.clear();
+                listSapXepCau.addAll(data);
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(AdminSapXepCauActivity.this,
+                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
