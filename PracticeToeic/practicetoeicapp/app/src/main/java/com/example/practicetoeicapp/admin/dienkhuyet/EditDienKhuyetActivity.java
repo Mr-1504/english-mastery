@@ -16,7 +16,7 @@ import com.example.practicetoeicapp.dienkhuyet.CauDienKhuyet;
 import java.util.Arrays;
 
 public class EditDienKhuyetActivity extends AppCompatActivity {
-    ImageView imgBack, imgEdit;
+    View imgBack, imgEdit;
     EditText edtNoiDung, edtGoiY, edtDapAn;
     QuestionRepository repository;
     int idDK;

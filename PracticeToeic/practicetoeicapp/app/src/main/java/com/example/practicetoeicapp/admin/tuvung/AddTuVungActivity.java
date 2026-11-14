@@ -23,7 +23,8 @@ import com.example.practicetoeicapp.data.SupabaseStorageRepository;
 import java.util.ArrayList;
 
 public class AddTuVungActivity extends AppCompatActivity {
-    ImageView imgBack, imgHinh, imgAdd;
+    View imgBack, imgAdd;
+    ImageView imgHinh;
     Button btnChonHinh, btnChonAudio;
     EditText edtTuVung, edtNghia, edtAudio;
     Spinner spnTuLoai;

@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +27,8 @@ public class TracNghiemActivity extends AppCompatActivity {
     ArrayList<BoHocTap> boHocTapArrayList;
     BoHocTapAdapter boHocTapAdapter;
     ImageView imgback;
+    ProgressBar progressBar;
+    TextView emptyState;
     QuestionRepository repository;
 
     @Override
@@ -34,6 +38,8 @@ public class TracNghiemActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.lvtracnghiem);
         imgback = findViewById(R.id.imgVBackTN);
+        progressBar = findViewById(R.id.progressBar);
+        emptyState = findViewById(R.id.emptyState);
         boHocTapArrayList = new ArrayList<>();
         boHocTapAdapter = new BoHocTapAdapter(TracNghiemActivity.this,
                 R.layout.row_botracnghiem, boHocTapArrayList);
@@ -68,12 +74,15 @@ public class TracNghiemActivity extends AppCompatActivity {
                 boHocTapArrayList.clear();
                 boHocTapArrayList.addAll(data);
                 boHocTapAdapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setVisibility(data.isEmpty() ? View.VISIBLE : View.GONE);
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(TracNghiemActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setText(R.string.question_set_error);
+                emptyState.setVisibility(View.VISIBLE);
             }
         });
     }

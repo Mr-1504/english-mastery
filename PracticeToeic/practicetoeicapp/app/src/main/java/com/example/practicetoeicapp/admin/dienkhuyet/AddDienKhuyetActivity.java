@@ -15,7 +15,7 @@ import com.example.practicetoeicapp.data.QuestionRepository;
 import java.util.Arrays;
 
 public class AddDienKhuyetActivity extends AppCompatActivity {
-    ImageView imgBack, imgAdd;
+    View imgBack, imgAdd;
     EditText edtNoiDung, edtGoiY, edtDapAn;
     QuestionRepository repository;
     int idBDK = 0;

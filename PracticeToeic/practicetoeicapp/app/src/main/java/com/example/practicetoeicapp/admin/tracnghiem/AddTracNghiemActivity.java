@@ -17,7 +17,7 @@ import com.example.practicetoeicapp.data.QuestionRepository;
 import java.util.ArrayList;
 
 public class AddTracNghiemActivity extends AppCompatActivity {
-    ImageView imgBack, imgAdd;
+    View imgBack, imgAdd;
     EditText edtNoiDung, edtDapAnA, edtDapAnB, edtDapAnC, edtDapAnD;
     Spinner spnDapAnTrue;
     QuestionRepository repository;

@@ -6,7 +6,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,6 +24,8 @@ public class DienKhuyetActivity extends AppCompatActivity {
 
     ListView listView;
     ImageView imgback;
+    ProgressBar progressBar;
+    TextView emptyState;
     ArrayList<BoHocTap> boHocTapArrayList;
     BoHocTapAdapter boHocTapAdapter;
     QuestionRepository repository;
@@ -34,6 +37,8 @@ public class DienKhuyetActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.lvdienkhuyet);
         imgback = findViewById(R.id.imgVBackDK);
+        progressBar = findViewById(R.id.progressBar);
+        emptyState = findViewById(R.id.emptyState);
         boHocTapArrayList = new ArrayList<>();
         boHocTapAdapter = new BoHocTapAdapter(DienKhuyetActivity.this,
                 R.layout.row_bodienkhuyet, boHocTapArrayList);
@@ -68,12 +73,15 @@ public class DienKhuyetActivity extends AppCompatActivity {
                 boHocTapArrayList.clear();
                 boHocTapArrayList.addAll(data);
                 boHocTapAdapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setVisibility(data.isEmpty() ? View.VISIBLE : View.GONE);
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(DienKhuyetActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setText(R.string.question_set_error);
+                emptyState.setVisibility(View.VISIBLE);
             }
         });
     }

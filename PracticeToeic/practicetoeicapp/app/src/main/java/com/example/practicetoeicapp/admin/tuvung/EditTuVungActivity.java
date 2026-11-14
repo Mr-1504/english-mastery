@@ -24,7 +24,8 @@ import com.example.practicetoeicapp.hoctuvung.TuVung;
 import java.util.ArrayList;
 
 public class EditTuVungActivity extends AppCompatActivity {
-    ImageView imgBack, imgHinh, imgEdit;
+    View imgBack, imgEdit;
+    ImageView imgHinh;
     Button btnChonHinh, btnChonAudio;
     EditText edtTuVung, edtNghia, edtAudio;
     Spinner spnTuLoai;

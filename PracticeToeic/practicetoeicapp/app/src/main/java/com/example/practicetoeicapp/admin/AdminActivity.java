@@ -4,15 +4,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.ListView;
+import android.os.Looper;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.MainActivity;
@@ -25,137 +22,157 @@ import com.example.practicetoeicapp.admin.tracnghiem.AdminBoTracNghiemActivity;
 import com.example.practicetoeicapp.admin.tuvung.AdminBoTuVungActivity;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
-import com.example.practicetoeicapp.singletonpattern.MessageObject;
 import com.example.practicetoeicapp.taikhoan.LoginActivity;
 import com.example.practicetoeicapp.taikhoan.ThongTinTaikhoanActivity;
 import com.example.practicetoeicapp.taikhoan.User;
+import com.example.practicetoeicapp.theme.ThemePrefs;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
 
-import java.util.ArrayList;
+import java.util.Locale;
 
 public class AdminActivity extends AppCompatActivity {
-    final  String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
-    DatabaseAccess DB;
-    private MessageObject messageObject = MessageObject.getInstance();
-    ArrayList<String> adminList;
-    AdminAdapter adapter;
-    ListView admins;
-    ImageView imgLogout;
-    Boolean doubleBack = false;
-    User user;
+
+    private static final String DATABASE_NAME = "HocNgonNgu.db";
+
+    private DatabaseAccess databaseAccess;
+    private boolean doubleBack;
+    private User user;
+    private TextView tvAdminGreeting;
+    private TextView tvAdminAvatar;
+    private TextView tvAdminThemeValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
-        admins = (ListView) findViewById(R.id.listviewAdmin);
-        imgLogout = (ImageView) findViewById(R.id.imgLogoutAdmin);
-        DB = DatabaseAccess.getInstance(getApplicationContext());
-        LayUser();
-        adminList = new ArrayList<>();
-        adminList.add("Thông tin tài khoản");
-        adminList.add("Học tập");
-        adminList.add("Bộ học tập");
-        adminList.add("Từ vựng");
-        adminList.add("Trắc nghiệm");
-        adminList.add("Sắp xếp câu");
-        adminList.add("Luyện nghe");
-        adminList.add("Điền khuyết");
-        adapter = new AdminAdapter(AdminActivity.this, R.layout.row_admin, adminList);
-        admins.setAdapter(adapter);
-        admins.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0) {
-                    startActivity(new Intent(AdminActivity.this, ThongTinTaikhoanActivity.class));
-                }
-                else if (position == 1) {
-                    Intent intent = new Intent(AdminActivity.this, MainActivity.class);
-                    startActivity(intent);
-                }
-                else if (position == 2) {
-                    startActivity(new Intent(AdminActivity.this, AdminBoHocTapActivity.class));
-                }
-                else if (position == 3) {
-                    startActivity(new Intent(AdminActivity.this, AdminBoTuVungActivity.class));
-                }
-                else if (position == 4) {
-                    startActivity(new Intent(AdminActivity.this, AdminBoTracNghiemActivity.class));
-                }
-                else if (position == 5) {
-                    startActivity(new Intent(AdminActivity.this, AdminBoSapXepCauActivity.class));
-                }
-                else if (position == 6) {
-                    startActivity(new Intent(AdminActivity.this, AdminBoLuyenNgheActivity.class));
-                }
-                else if (position == 7) {
-                    startActivity(new Intent(AdminActivity.this, AdminBoDienKhuyetActivity.class));
-                }
-            }
-        });
-        adapter.notifyDataSetChanged();
 
-        CountDownTimer countDownTimer=new CountDownTimer(3000,3000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                messageObject.ShowDialogMessage(Gravity.CENTER,
-                        AdminActivity.this,
-                        "KHÔNG THỂ TRUY CẬP!!Tài khoản của bạn không phải Quản Lý!!",
-                        0);
-            }
+        databaseAccess = DatabaseAccess.getInstance(getApplicationContext());
+        tvAdminGreeting = findViewById(R.id.tvAdminGreeting);
+        tvAdminAvatar = findViewById(R.id.tvAdminAvatar);
+        tvAdminThemeValue = findViewById(R.id.tvAdminThemeValue);
 
-            @Override
-            public void onFinish() {
+        bindHeader();
+        bindContentCards();
+        bindQuickActions();
+        setupBackHandling();
 
-                Intent intent = new Intent(AdminActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
-        };
-
-        if (user.getRole()==1) {
-            countDownTimer.start();
-
+        if (!loadUser() || user.getRole() != 0) {
+            showRoleDenied();
+            return;
         }
-
-
-
-        imgLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminActivity.this, LoginActivity.class));
-            }
-        });
+        showGreeting();
     }
+
     @Override
-    public void onBackPressed() {
-        if (doubleBack) {
-            super.onBackPressed();
-            finish();
-            //thoát
-            moveTaskToBack(true);
+    protected void onResume() {
+        super.onResume();
+        if (tvAdminThemeValue != null) {
+            tvAdminThemeValue.setText(getString(R.string.theme_current,
+                    ThemePrefs.getModeLabel(this, ThemePrefs.getMode(this))));
         }
-        this.doubleBack = true;
-        Toast.makeText(getApplicationContext(), "Nhấn lần nữa để thoát", Toast.LENGTH_SHORT).show();
-        //thời gian chờ là 2s
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                doubleBack = false;
-            }
-        }, 2000);
     }
 
-    public void LayUser()
-    {
-        database = Database.initDatabase(AdminActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM User WHERE ID_User = ?",new String[]{String.valueOf(DB.iduser)});
-        cursor.moveToNext();
-        String Iduser = cursor.getString(0);
-        String HoTen = cursor.getString(1);
-        int Point = cursor.getInt(2);
-        String Email = cursor.getString(3);
-        String SDT = cursor.getString(4);
-        int Role = cursor.getInt(5);
-        user = new User(Iduser,HoTen,Point,Email,SDT,Role);
+    private void bindHeader() {
+        findViewById(R.id.btnThemeAdmin).setOnClickListener(v -> ThemePrefs.showThemeDialog(this));
+        findViewById(R.id.btnLogoutAdmin).setOnClickListener(v -> confirmLogout());
+    }
+
+    private void bindContentCards() {
+        findViewById(R.id.adminCardBoHocTap).setOnClickListener(v ->
+                startActivity(new Intent(this, AdminBoHocTapActivity.class)));
+        findViewById(R.id.adminCardBoTuVung).setOnClickListener(v ->
+                startActivity(new Intent(this, AdminBoTuVungActivity.class)));
+        findViewById(R.id.adminCardBoTracNghiem).setOnClickListener(v ->
+                startActivity(new Intent(this, AdminBoTracNghiemActivity.class)));
+        findViewById(R.id.adminCardBoSapXepCau).setOnClickListener(v ->
+                startActivity(new Intent(this, AdminBoSapXepCauActivity.class)));
+        findViewById(R.id.adminCardBoLuyenNghe).setOnClickListener(v ->
+                startActivity(new Intent(this, AdminBoLuyenNgheActivity.class)));
+        findViewById(R.id.adminCardBoDienKhuyet).setOnClickListener(v ->
+                startActivity(new Intent(this, AdminBoDienKhuyetActivity.class)));
+    }
+
+    private void bindQuickActions() {
+        findViewById(R.id.rowAdminTheme).setOnClickListener(v -> ThemePrefs.showThemeDialog(this));
+        findViewById(R.id.rowAdminLearning).setOnClickListener(v -> openLearningMode());
+        findViewById(R.id.rowAdminAccount).setOnClickListener(v ->
+                startActivity(new Intent(this, ThongTinTaikhoanActivity.class)));
+    }
+
+    private void setupBackHandling() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (doubleBack) {
+                    finish();
+                    return;
+                }
+                doubleBack = true;
+                Toast.makeText(getApplicationContext(), R.string.admin_press_back_again,
+                        Toast.LENGTH_SHORT).show();
+                new Handler(Looper.getMainLooper()).postDelayed(() -> doubleBack = false, 2000);
+            }
+        });
+    }
+
+    private void showGreeting() {
+        String name = user.getHoTen();
+        if (name == null || name.trim().isEmpty()) {
+            name = getString(R.string.admin_role_chip);
+        }
+        tvAdminGreeting.setText(getString(R.string.admin_greeting, name));
+        tvAdminAvatar.setText(name.substring(0, 1).toUpperCase(Locale.getDefault()));
+    }
+
+    private void showRoleDenied() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.admin_role_denied_title)
+                .setMessage(R.string.admin_role_denied)
+                .setCancelable(false)
+                .setPositiveButton(R.string.admin_back_to_learning, (dialog, which) ->
+                        openLearningMode())
+                .show();
+    }
+
+    private void openLearningMode() {
+        startActivity(new Intent(this, MainActivity.class));
+        finish();
+    }
+
+    private void confirmLogout() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.logout_dialog_title)
+                .setMessage(R.string.logout_dialog_message)
+                .setNegativeButton(R.string.logout_cancel, null)
+                .setPositiveButton(R.string.admin_logout, (dialog, which) -> logout())
+                .show();
+    }
+
+    private void logout() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private boolean loadUser() {
+        SQLiteDatabase database = Database.initDatabase(this, DATABASE_NAME);
+        try (Cursor cursor = database.rawQuery(
+                "SELECT * FROM User WHERE ID_User = ?",
+                new String[]{String.valueOf(databaseAccess.iduser)})) {
+            if (!cursor.moveToFirst()) {
+                return false;
+            }
+            user = new User(
+                    cursor.getString(0),
+                    cursor.getString(1),
+                    cursor.getInt(2),
+                    cursor.getString(3),
+                    cursor.getString(4),
+                    cursor.getInt(5));
+            return true;
+        }
     }
 }

@@ -18,7 +18,7 @@ import com.example.practicetoeicapp.tracnghiem.CauTracNghiem;
 import java.util.ArrayList;
 
 public class EditTracNghiemActivity extends AppCompatActivity {
-    ImageView imgBack, imgEdit;
+    View imgBack, imgEdit;
     EditText edtNoiDung, edtDapAnA, edtDapAnB, edtDapAnC, edtDapAnD;
     Spinner spnDapAnTrue;
     QuestionRepository repository;

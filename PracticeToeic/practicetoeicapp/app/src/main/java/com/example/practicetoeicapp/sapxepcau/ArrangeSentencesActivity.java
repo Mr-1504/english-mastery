@@ -4,8 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.Animation;
@@ -17,6 +17,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
@@ -38,7 +41,8 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
     private String[] keys = {"part1", "part2", "part3", "part4"};
     private String textAnswer = "ENGLISH";
     private int maxPresCounter = 4;
-    Button btnquit;
+    Button btnquit, btnback;
+    LinearProgressIndicator progressSXC;
     TextView textScreen, textTitle;
     TextView tvQuestionCount, tvScore;
     ArrayList<CauSapXep> cauSapXeps;
@@ -61,6 +65,12 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
         Intent intent = getIntent();
         idbo = intent.getIntExtra("idbo", 0);
         cauSapXeps = new ArrayList<>();
+        btnback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnquit.performClick();
+            }
+        });
         LayUser();
         loadQuestions();
     }
@@ -100,8 +110,7 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
         keys[2] = cauSapXeps.get(0).getPart3();
         keys[3] = cauSapXeps.get(0).getPart4();
 
-        tvQuestionCount.setText("Question: " + cau + "/" + cauSapXeps.size());
-        tvScore.setText("Score: " + score);
+        updateHeader();
 
         keys = shuffleArray(keys);
 
@@ -134,6 +143,8 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
         tvQuestionCount = findViewById(R.id.tvQuestionSXC);
         tvScore = findViewById(R.id.tvScoreSXC);
         btnquit = findViewById(R.id.btnQuitSXC);
+        btnback = findViewById(R.id.btnBackSXC);
+        progressSXC = findViewById(R.id.progressSXC);
     }
 
     public void LayUser() {
@@ -163,31 +174,24 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
 
     private void addView(LinearLayout viewParent, final String text, final EditText editText) {
         LinearLayout.LayoutParams linearLayoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
 
-        linearLayoutParams.rightMargin = 5;
+        linearLayoutParams.setMargins(dp(4), dp(4), dp(4), dp(4));
 
         final TextView textView = new TextView(this);
 
         textView.setLayoutParams(linearLayoutParams);
-        textView.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        textView.setTextColor(this.getResources().getColor(R.color.colorPurple));
+        textView.setBackgroundResource(R.drawable.bg_chip);
+        textView.setTextColor(ContextCompat.getColor(this, R.color.app_on_primary_container));
         textView.setGravity(Gravity.CENTER);
         textView.setText(text);
         textView.setClickable(true);
         textView.setFocusable(true);
-        textView.setTextSize(30);
-
-        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/FredokaOneRegular.ttf");
-
-        textScreen.setTypeface(typeface);
-        textTitle.setTypeface(typeface);
-        tvQuestionCount.setTypeface(typeface);
-        tvScore.setTypeface(typeface);
-        editText.setTypeface(typeface);
-        textView.setTypeface(typeface);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        textView.setMinHeight(dp(48));
+        textView.setPadding(dp(14), dp(10), dp(14), dp(10));
         textView.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("SetTextI18n")
             @Override
@@ -219,6 +223,19 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
         viewParent.addView(textView);
     }
 
+    private void updateHeader() {
+        int total = cauSapXeps.size();
+        int current = Math.min(cau, total);
+        tvQuestionCount.setText(getString(R.string.quiz_progress, current, total));
+        tvScore.setText(getString(R.string.quiz_score, score));
+        progressSXC.setProgressCompat(total == 0 ? 0 : current * 100 / total, true);
+    }
+
+    private int dp(int value) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
+                getResources().getDisplayMetrics()));
+    }
+
     private void doValidate() {
         presCounter = 0;
 
@@ -239,6 +256,7 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
                 intent.putExtra("qcount", cauSapXeps.size());
                 startActivity(intent);
                 finish();
+                return;
             } else {
                 Toast.makeText(ArrangeSentencesActivity.this, "Chính xác!!(^.^)", Toast.LENGTH_SHORT).show();
                 textAnswer = cauSapXeps.get(cau).getDapan();
@@ -249,13 +267,13 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
                 editText.setText("");
                 score += 5;
                 cau++;
-                tvQuestionCount.setText("Question: " + cau + "/" + cauSapXeps.size());
-                tvScore.setText("Score: " + score);
             }
         } else {
             Toast.makeText(ArrangeSentencesActivity.this, "Sai rồi!!(T.T)", Toast.LENGTH_SHORT).show();
             editText.setText("");
         }
+
+        updateHeader();
 
         keys = shuffleArray(keys);
         Part1.removeAllViews();

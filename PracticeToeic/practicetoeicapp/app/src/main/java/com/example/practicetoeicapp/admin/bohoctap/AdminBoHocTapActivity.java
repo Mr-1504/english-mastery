@@ -2,15 +2,11 @@ package com.example.practicetoeicapp.admin.bohoctap;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.admin.AdminActivity;
+import com.example.practicetoeicapp.admin.AdminListController;
 import com.example.practicetoeicapp.bohoctap.BoHocTap;
 import com.example.practicetoeicapp.data.QuestionRepository;
 
@@ -20,34 +16,27 @@ import java.util.List;
 public class AdminBoHocTapActivity extends AppCompatActivity {
     ArrayList<BoHocTap> listBHT;
     AdminBoHocTapAdapter adapter;
-    ImageView imgBack, imgAdd;
-    ListView listViewBHT;
+    AdminListController listController;
     QuestionRepository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_bohoctap);
-        listViewBHT = findViewById(R.id.listviewAdminBHT);
-        imgBack = findViewById(R.id.imgBackAdminBHT);
-        imgAdd = findViewById(R.id.imgAddBHT);
+        listController = new AdminListController(this,
+                R.string.admin_bohoctap_title,
+                R.string.admin_list_subtitle,
+                true,
+                R.string.admin_list_empty_add);
         repository = QuestionRepository.getInstance();
         listBHT = new ArrayList<>();
         adapter = new AdminBoHocTapAdapter(AdminBoHocTapActivity.this, listBHT);
-        listViewBHT.setAdapter(adapter);
+        listController.listView.setAdapter(adapter);
         loadBoHocTap();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminBoHocTapActivity.this, AdminActivity.class));
-            }
-        });
-        imgAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminBoHocTapActivity.this, AddBoHocTapActivity.class));
-            }
-        });
+
+        listController.bindBack(v -> finish());
+        listController.bindAdd(v ->
+                startActivity(new Intent(AdminBoHocTapActivity.this, AddBoHocTapActivity.class)));
     }
 
     private void loadBoHocTap() {
@@ -57,12 +46,12 @@ public class AdminBoHocTapActivity extends AppCompatActivity {
                 listBHT.clear();
                 listBHT.addAll(data);
                 adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(AdminBoHocTapActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                listController.showError();
             }
         });
     }

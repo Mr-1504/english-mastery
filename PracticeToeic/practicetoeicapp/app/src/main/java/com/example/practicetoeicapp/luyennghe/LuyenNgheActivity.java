@@ -6,7 +6,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,6 +23,8 @@ import java.util.List;
 public class LuyenNgheActivity extends AppCompatActivity {
     ListView listView;
     ImageView imgback;
+    ProgressBar progressBar;
+    TextView emptyState;
     ArrayList<BoHocTap> boCauHoiArrayList;
     BoHocTapAdapter boCauHoiAdapter;
     QuestionRepository repository;
@@ -32,6 +35,8 @@ public class LuyenNgheActivity extends AppCompatActivity {
         setContentView(R.layout.activity_luyen_nghe);
         listView = findViewById(R.id.lvluyennghe);
         imgback = findViewById(R.id.imgVBackLN);
+        progressBar = findViewById(R.id.progressBar);
+        emptyState = findViewById(R.id.emptyState);
         boCauHoiArrayList = new ArrayList<>();
         boCauHoiAdapter = new BoHocTapAdapter(LuyenNgheActivity.this,
                 R.layout.row_boluyennghe, boCauHoiArrayList);
@@ -66,12 +71,15 @@ public class LuyenNgheActivity extends AppCompatActivity {
                 boCauHoiArrayList.clear();
                 boCauHoiArrayList.addAll(data);
                 boCauHoiAdapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setVisibility(data.isEmpty() ? View.VISIBLE : View.GONE);
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(LuyenNgheActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setText(R.string.question_set_error);
+                emptyState.setVisibility(View.VISIBLE);
             }
         });
     }

@@ -7,6 +7,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,6 +24,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
     private EditText EmailF;
     private Button btnResetP;
+    private TextView tvDangNhap;
 
     FirebaseAuth mAuth;
     private MessageObject messageObject = MessageObject.getInstance();
@@ -34,6 +36,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         EmailF = (EditText) findViewById(R.id.etEmailForgot);
         btnResetP = (Button) findViewById(R.id.btnResetPass);
+        tvDangNhap = findViewById(R.id.textView_login);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -41,6 +44,14 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 resetPassword();
+            }
+        });
+
+        tvDangNhap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ForgotPasswordActivity.this, LoginActivity.class));
+                finish();
             }
         });
     }
@@ -57,6 +68,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
             EmailF.setError("Hãy nhập đúng Email!");
             EmailF.requestFocus();
+            return;
         }
 
         mAuth.sendPasswordResetEmail(email).addOnCompleteListener(new OnCompleteListener<Void>() {

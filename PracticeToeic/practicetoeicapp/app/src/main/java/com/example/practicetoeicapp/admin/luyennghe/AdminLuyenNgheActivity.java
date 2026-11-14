@@ -2,14 +2,11 @@ package com.example.practicetoeicapp.admin.luyennghe;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
+import com.example.practicetoeicapp.admin.AdminListController;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.luyennghe.CauLuyenNghe;
 
@@ -17,10 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AdminLuyenNgheActivity extends AppCompatActivity {
-    ImageView imgBack, imgAdd;
     ArrayList<CauLuyenNghe> listLuyenNghe;
     AdminLuyenNgheAdapter adapter;
-    ListView lvLuyenNghe;
+    AdminListController listController;
     QuestionRepository repository;
     int idbo;
 
@@ -29,27 +25,22 @@ public class AdminLuyenNgheActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_luyennghe);
         idbo = getIntent().getIntExtra("idBoLuyenNghe", 0);
-        lvLuyenNghe = findViewById(R.id.listviewAdminLN);
-        imgBack = findViewById(R.id.imgBackAdminLN);
-        imgAdd = findViewById(R.id.imgAddAdminLN);
+        listController = new AdminListController(this,
+                R.string.admin_luyennghe_content,
+                R.string.admin_list_subtitle,
+                true,
+                R.string.admin_list_empty_add);
         repository = QuestionRepository.getInstance();
         listLuyenNghe = new ArrayList<>();
         adapter = new AdminLuyenNgheAdapter(AdminLuyenNgheActivity.this, listLuyenNghe);
-        lvLuyenNghe.setAdapter(adapter);
+        listController.listView.setAdapter(adapter);
         loadLuyenNghe();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminLuyenNgheActivity.this, AdminBoLuyenNgheActivity.class));
-            }
-        });
-        imgAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AdminLuyenNgheActivity.this, AddLuyenNgheActivity.class);
-                intent.putExtra("idBoLuyenNghe", idbo);
-                startActivity(intent);
-            }
+
+        listController.bindBack(v -> finish());
+        listController.bindAdd(v -> {
+            Intent intent = new Intent(AdminLuyenNgheActivity.this, AddLuyenNgheActivity.class);
+            intent.putExtra("idBoLuyenNghe", idbo);
+            startActivity(intent);
         });
     }
 
@@ -60,12 +51,12 @@ public class AdminLuyenNgheActivity extends AppCompatActivity {
                 listLuyenNghe.clear();
                 listLuyenNghe.addAll(data);
                 adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(AdminLuyenNgheActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                listController.showError();
             }
         });
     }

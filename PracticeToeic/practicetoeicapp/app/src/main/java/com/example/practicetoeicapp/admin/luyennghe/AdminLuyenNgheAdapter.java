@@ -1,8 +1,6 @@
 package com.example.practicetoeicapp.admin.luyennghe;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +13,7 @@ import android.widget.Toast;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.luyennghe.CauLuyenNghe;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,51 +46,48 @@ public class AdminLuyenNgheAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.row_luyennghe, null);
-        TextView txtTenLuyenNghe = view.findViewById(R.id.tvTenLuyenNghe);
-        ImageView imgEdit = view.findViewById(R.id.imgEditLN);
-        ImageView imgDelete = view.findViewById(R.id.imgDeleteLN);
-        CauLuyenNghe ln = list.get(position);
-        txtTenLuyenNghe.setText("Bài " + ln.getIdbai());
-        imgEdit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, EditLuyenNgheActivity.class);
-                intent.putExtra("ID_LN", ln.getIdbai());
-                context.startActivity(intent);
-            }
-        });
-        imgDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(context)
-                        .setTitle("Xác nhận xóa")
-                        .setMessage("Bạn chắc chắn muốn xóa bài nghe này?")
-                        .setPositiveButton("Có", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                repository.deleteLuyenNghe(ln.getIdbai(),
-                                        new QuestionRepository.DataCallback<Void>() {
-                                            @Override
-                                            public void onSuccess(Void data) {
-                                                Toast.makeText(context, "Xóa thành công", Toast.LENGTH_SHORT).show();
-                                                reload(ln.getIdbo());
-                                            }
+        ViewHolder holder;
+        if (convertView == null) {
+            convertView = LayoutInflater.from(context).inflate(R.layout.row_luyennghe, parent, false);
+            holder = new ViewHolder(convertView);
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
 
-                                            @Override
-                                            public void onError(Exception e) {
-                                                Toast.makeText(context, "Xóa thất bại", Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                            }
-                        })
-                        .setNegativeButton("Không", null)
-                        .create()
-                        .show();
-            }
+        CauLuyenNghe cauLuyenNghe = list.get(position);
+        holder.title.setText(context.getString(R.string.admin_listen_item, cauLuyenNghe.getIdbai()));
+        holder.edit.setOnClickListener(v -> {
+            Intent intent = new Intent(context, EditLuyenNgheActivity.class);
+            intent.putExtra("ID_LN", cauLuyenNghe.getIdbai());
+            context.startActivity(intent);
         });
-        return view;
+        holder.delete.setOnClickListener(v -> confirmDelete(cauLuyenNghe));
+        return convertView;
+    }
+
+    private void confirmDelete(CauLuyenNghe cauLuyenNghe) {
+        new MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.admin_delete_title)
+                .setMessage(R.string.admin_delete_message)
+                .setNegativeButton(R.string.admin_cancel, null)
+                .setPositiveButton(R.string.admin_delete_confirm, (dialog, which) ->
+                        repository.deleteLuyenNghe(cauLuyenNghe.getIdbai(),
+                                new QuestionRepository.DataCallback<Void>() {
+                                    @Override
+                                    public void onSuccess(Void data) {
+                                        Toast.makeText(context, R.string.admin_delete_success,
+                                                Toast.LENGTH_SHORT).show();
+                                        reload(cauLuyenNghe.getIdbo());
+                                    }
+
+                                    @Override
+                                    public void onError(Exception e) {
+                                        Toast.makeText(context, R.string.admin_delete_error,
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                }))
+                .show();
     }
 
     private void reload(int idBo) {
@@ -105,8 +101,20 @@ public class AdminLuyenNgheAdapter extends BaseAdapter {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(context, "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.admin_list_error, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private static class ViewHolder {
+        final TextView title;
+        final ImageView edit;
+        final ImageView delete;
+
+        ViewHolder(View view) {
+            title = view.findViewById(R.id.tvTenLuyenNghe);
+            edit = view.findViewById(R.id.imgEditLN);
+            delete = view.findViewById(R.id.imgDeleteLN);
+        }
     }
 }

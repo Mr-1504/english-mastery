@@ -1,0 +1,159 @@
+package com.example.practicetoeicapp.ui.profile;
+
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
+import com.example.practicetoeicapp.R;
+import com.example.practicetoeicapp.admin.AdminActivity;
+import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.database.DatabaseAccess;
+import com.example.practicetoeicapp.taikhoan.LoginActivity;
+import com.example.practicetoeicapp.taikhoan.RankingActivity;
+import com.example.practicetoeicapp.taikhoan.ThongTinTaikhoanActivity;
+import com.example.practicetoeicapp.theme.ThemePrefs;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.Locale;
+
+public class ProfileFragment extends Fragment {
+
+    private static final String DATABASE_NAME = "HocNgonNgu.db";
+    private static final String FEEDBACK_EMAIL = "21102003tai@gmail.com";
+    private DatabaseAccess DB;
+    private SQLiteDatabase database;
+    private TextView tvProfileName;
+    private TextView tvProfileEmail;
+    private TextView tvProfilePoint;
+    private TextView tvProfileRole;
+    private TextView tvRole;
+    private TextView tvThemeValue;
+    private TextView profileAvatar;
+    private View rowAdmin;
+    private View dividerAdmin;
+    private int role;
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        View root = inflater.inflate(R.layout.fragment_profile, container, false);
+        DB = DatabaseAccess.getInstance(requireContext().getApplicationContext());
+
+        tvProfileName = root.findViewById(R.id.tvProfileName);
+        tvProfileEmail = root.findViewById(R.id.tvProfileEmail);
+        tvProfilePoint = root.findViewById(R.id.tvProfilePoint);
+        tvProfileRole = root.findViewById(R.id.tvProfileRole);
+        tvRole = root.findViewById(R.id.tvRole);
+        tvThemeValue = root.findViewById(R.id.tvThemeValue);
+        profileAvatar = root.findViewById(R.id.profileAvatar);
+        rowAdmin = root.findViewById(R.id.rowAdmin);
+        dividerAdmin = root.findViewById(R.id.dividerAdmin);
+
+        root.findViewById(R.id.rowAccount).setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), ThongTinTaikhoanActivity.class)));
+        root.findViewById(R.id.rowRanking).setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), RankingActivity.class)));
+        root.findViewById(R.id.rowTheme).setOnClickListener(v ->
+                ThemePrefs.showThemeDialog(requireContext()));
+        root.findViewById(R.id.rowFeedback).setOnClickListener(v -> sendFeedback());
+        rowAdmin.setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), AdminActivity.class)));
+        root.findViewById(R.id.btnLogout).setOnClickListener(v -> confirmLogout());
+
+        return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateThemeSummary();
+        loadUser();
+    }
+
+    private void updateThemeSummary() {
+        if (tvThemeValue == null) {
+            return;
+        }
+        String label = ThemePrefs.getModeLabel(requireContext(), ThemePrefs.getMode(requireContext()));
+        tvThemeValue.setText(getString(R.string.theme_current, label));
+    }
+
+    private void loadUser() {
+        if (DB == null || DB.iduser == null || DB.iduser.isEmpty()) {
+            return;
+        }
+        database = Database.initDatabase(requireActivity(), DATABASE_NAME);
+        Cursor cursor = database.rawQuery(
+                "SELECT HoTen, Point, Email, Role FROM User WHERE ID_User = ?",
+                new String[]{DB.iduser});
+        String name = "Bạn";
+        int point = 0;
+        String email = "";
+        role = 1;
+        if (cursor.moveToFirst()) {
+            name = cursor.getString(0);
+            point = cursor.getInt(1);
+            email = cursor.getString(2);
+            role = cursor.getInt(3);
+        }
+        cursor.close();
+
+        String displayName = name == null || name.trim().isEmpty() ? "Bạn" : name.trim();
+        String displayEmail = email == null || email.trim().isEmpty() ? "Chưa cập nhật email" : email.trim();
+        tvProfileName.setText(displayName);
+        tvProfileEmail.setText(displayEmail);
+        tvProfilePoint.setText(String.valueOf(point));
+        profileAvatar.setText(displayName.substring(0, 1).toUpperCase(Locale.getDefault()));
+
+        String roleLabel = role == 0
+                ? getString(R.string.profile_admin)
+                : getString(R.string.profile_member);
+        tvRole.setText(roleLabel);
+        tvProfileRole.setText(roleLabel);
+
+        boolean isAdmin = role == 0;
+        rowAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+        dividerAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+    }
+
+    private void confirmLogout() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.logout_dialog_title)
+                .setMessage(R.string.logout_dialog_message)
+                .setNegativeButton(R.string.logout_cancel, null)
+                .setPositiveButton(R.string.profile_logout, (dialog, which) -> logout())
+                .show();
+    }
+
+    private void logout() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(requireContext(), LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finish();
+    }
+
+    private void sendFeedback() {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setData(Uri.parse("mailto:"));
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{FEEDBACK_EMAIL});
+        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.email_chooser)));
+        } catch (Exception exception) {
+            Toast.makeText(requireContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+}

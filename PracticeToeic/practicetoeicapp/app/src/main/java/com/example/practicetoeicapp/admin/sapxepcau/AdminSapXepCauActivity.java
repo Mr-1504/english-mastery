@@ -2,14 +2,11 @@ package com.example.practicetoeicapp.admin.sapxepcau;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
+import com.example.practicetoeicapp.admin.AdminListController;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.sapxepcau.CauSapXep;
 
@@ -17,10 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AdminSapXepCauActivity extends AppCompatActivity {
-    ImageView imgBack, imgAdd;
     ArrayList<CauSapXep> listSapXepCau;
     AdminSapXepCauAdapter adapter;
-    ListView lvSapXepCau;
+    AdminListController listController;
     QuestionRepository repository;
     int idbo;
 
@@ -29,27 +25,22 @@ public class AdminSapXepCauActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_sapxepcau);
         idbo = getIntent().getIntExtra("idBoSapXepCau", 0);
-        lvSapXepCau = findViewById(R.id.listviewAdminSXC);
-        imgBack = findViewById(R.id.imgBackAdminSXC);
-        imgAdd = findViewById(R.id.imgAddAdminSXC);
+        listController = new AdminListController(this,
+                R.string.admin_sapxepcau_content,
+                R.string.admin_list_subtitle,
+                true,
+                R.string.admin_list_empty_add);
         repository = QuestionRepository.getInstance();
         listSapXepCau = new ArrayList<>();
         adapter = new AdminSapXepCauAdapter(AdminSapXepCauActivity.this, listSapXepCau);
-        lvSapXepCau.setAdapter(adapter);
+        listController.listView.setAdapter(adapter);
         loadSapXepCau();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminSapXepCauActivity.this, AdminBoSapXepCauActivity.class));
-            }
-        });
-        imgAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AdminSapXepCauActivity.this, AddSapXepCauActivity.class);
-                intent.putExtra("idBoSapXepCau", idbo);
-                startActivity(intent);
-            }
+
+        listController.bindBack(v -> finish());
+        listController.bindAdd(v -> {
+            Intent intent = new Intent(AdminSapXepCauActivity.this, AddSapXepCauActivity.class);
+            intent.putExtra("idBoSapXepCau", idbo);
+            startActivity(intent);
         });
     }
 
@@ -60,12 +51,12 @@ public class AdminSapXepCauActivity extends AppCompatActivity {
                 listSapXepCau.clear();
                 listSapXepCau.addAll(data);
                 adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(AdminSapXepCauActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                listController.showError();
             }
         });
     }

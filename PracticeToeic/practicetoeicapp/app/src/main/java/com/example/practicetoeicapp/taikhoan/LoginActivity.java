@@ -20,6 +20,7 @@ import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.notify.MyService;
 import com.example.practicetoeicapp.singletonpattern.MessageObject;
+import com.example.practicetoeicapp.theme.ThemePrefs;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -54,6 +55,9 @@ public class LoginActivity extends AppCompatActivity {
         AnhXa();
         DB = DatabaseAccess.getInstance(getApplicationContext());
         mAuth = FirebaseAuth.getInstance();
+
+        findViewById(R.id.btnThemeLogin).setOnClickListener(v ->
+                ThemePrefs.showThemeDialog(LoginActivity.this));
 
         //Đăng nhập thành công chuyển sang MainActivity
         btnDangnhap.setOnClickListener(new View.OnClickListener() {

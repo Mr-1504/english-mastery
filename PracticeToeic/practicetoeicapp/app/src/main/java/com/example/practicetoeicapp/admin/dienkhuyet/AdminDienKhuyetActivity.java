@@ -2,14 +2,11 @@ package com.example.practicetoeicapp.admin.dienkhuyet;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
+import com.example.practicetoeicapp.admin.AdminListController;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.dienkhuyet.CauDienKhuyet;
 
@@ -17,10 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AdminDienKhuyetActivity extends AppCompatActivity {
-    ImageView imgBack, imgAdd;
     ArrayList<CauDienKhuyet> listDienKhuyet;
     AdminDienKhuyetAdapter adapter;
-    ListView lvDienKhuyet;
+    AdminListController listController;
     QuestionRepository repository;
     int idbo;
 
@@ -29,27 +25,22 @@ public class AdminDienKhuyetActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_dienkhuyet);
         idbo = getIntent().getIntExtra("idBoDienKhuyet", 0);
-        lvDienKhuyet = findViewById(R.id.listviewAdminDK);
-        imgBack = findViewById(R.id.imgBackAdminDK);
-        imgAdd = findViewById(R.id.imgAddAdminDK);
+        listController = new AdminListController(this,
+                R.string.admin_dienkhuyet_content,
+                R.string.admin_list_subtitle,
+                true,
+                R.string.admin_list_empty_add);
         repository = QuestionRepository.getInstance();
         listDienKhuyet = new ArrayList<>();
         adapter = new AdminDienKhuyetAdapter(AdminDienKhuyetActivity.this, listDienKhuyet);
-        lvDienKhuyet.setAdapter(adapter);
+        listController.listView.setAdapter(adapter);
         loadDienKhuyet();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminDienKhuyetActivity.this, AdminBoDienKhuyetActivity.class));
-            }
-        });
-        imgAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AdminDienKhuyetActivity.this, AddDienKhuyetActivity.class);
-                intent.putExtra("idBoDienKhuyet", idbo);
-                startActivity(intent);
-            }
+
+        listController.bindBack(v -> finish());
+        listController.bindAdd(v -> {
+            Intent intent = new Intent(AdminDienKhuyetActivity.this, AddDienKhuyetActivity.class);
+            intent.putExtra("idBoDienKhuyet", idbo);
+            startActivity(intent);
         });
     }
 
@@ -60,12 +51,12 @@ public class AdminDienKhuyetActivity extends AppCompatActivity {
                 listDienKhuyet.clear();
                 listDienKhuyet.addAll(data);
                 adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(AdminDienKhuyetActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                listController.showError();
             }
         });
     }

@@ -24,7 +24,8 @@ import com.example.practicetoeicapp.luyennghe.CauLuyenNghe;
 import java.util.ArrayList;
 
 public class EditLuyenNgheActivity extends AppCompatActivity {
-    ImageView imgBack, imgHinh, imgEdit;
+    View imgBack, imgEdit;
+    ImageView imgHinh;
     Button btnChonHinh, btnChonAudio;
     EditText edtAudio;
     Spinner spnDapAnTrue;

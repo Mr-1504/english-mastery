@@ -6,7 +6,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,6 +23,8 @@ import java.util.List;
 public class HocTuVungActivity extends AppCompatActivity {
 
     ImageView imgback;
+    ProgressBar progressBar;
+    TextView emptyState;
     ArrayList<BoHocTap> boTuVungs;
     BoHocTapAdapter adapter;
     ListView botuvungs;
@@ -33,6 +36,8 @@ public class HocTuVungActivity extends AppCompatActivity {
         setContentView(R.layout.activity_hoctuvung);
         botuvungs = findViewById(R.id.listviewHTV);
         imgback = findViewById(R.id.imgVBackHTV);
+        progressBar = findViewById(R.id.progressBar);
+        emptyState = findViewById(R.id.emptyState);
         boTuVungs = new ArrayList<>();
         adapter = new BoHocTapAdapter(HocTuVungActivity.this,
                 R.layout.row_botuvung, boTuVungs);
@@ -65,12 +70,15 @@ public class HocTuVungActivity extends AppCompatActivity {
                 boTuVungs.clear();
                 boTuVungs.addAll(data);
                 adapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setVisibility(data.isEmpty() ? View.VISIBLE : View.GONE);
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(HocTuVungActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setText(R.string.question_set_error);
+                emptyState.setVisibility(View.VISIBLE);
             }
         });
     }

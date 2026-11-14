@@ -14,7 +14,7 @@ import com.example.practicetoeicapp.bohoctap.BoHocTap;
 import com.example.practicetoeicapp.data.QuestionRepository;
 
 public class EditBoHocTapActivity extends AppCompatActivity {
-    ImageView imgBack, imgEdit;
+    View imgBack, imgEdit;
     EditText edtBoHocTap;
     QuestionRepository repository;
     int idBHT;

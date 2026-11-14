@@ -4,10 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.Animation;
@@ -21,6 +21,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.R;
@@ -54,7 +57,8 @@ public class WordMattersActivity extends AppCompatActivity {
     private TextView tvWordCount, tvScore;
     private ImageButton ListenTV;
     private ImageView imgview;
-    private Button btnquit;
+    private Button btnquit, btnback;
+    private LinearProgressIndicator progressHTV;
     private ArrayList<TuVung> DStuvung;
     private Animation smallbigforth;
     private int idbo;
@@ -74,6 +78,12 @@ public class WordMattersActivity extends AppCompatActivity {
         DB = DatabaseAccess.getInstance(getApplicationContext());
         repository = QuestionRepository.getInstance();
         AnhXa();
+        btnback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnquit.performClick();
+            }
+        });
         LayUser();
 
         Intent intent = getIntent();
@@ -119,14 +129,13 @@ public class WordMattersActivity extends AppCompatActivity {
 
         showWord(0);
         textQuestion.setText("(" + DStuvung.get(0).getLoaitu() + ") - " + "(" + DStuvung.get(0).getDichnghia() + ")");
-        tvWordCount.setText("Word: " + tu + "/" + DStuvung.size());
-        tvScore.setText("Score: " + score);
-
         textAnswer = DStuvung.get(0).getDapan();
+        updateHeader();
         URL = DStuvung.get(0).getAudio();
 
         smallbigforth = AnimationUtils.loadAnimation(this, R.anim.smallbigforth);
 
+        keys = new String[textAnswer.length()];
         for (int i = 0; i < textAnswer.length(); i++) {
             keys[i] = String.valueOf(textAnswer.charAt(i));
         }
@@ -185,6 +194,8 @@ public class WordMattersActivity extends AppCompatActivity {
         tvScore = findViewById(R.id.tvScore);
         ListenTV = findViewById(R.id.ListenTuVung);
         btnquit = findViewById(R.id.btnQuitHTV);
+        btnback = findViewById(R.id.btnBackHTV);
+        progressHTV = findViewById(R.id.progressHTV);
     }
 
     public void LayUser() {
@@ -218,27 +229,21 @@ public class WordMattersActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
 
-        linearLayoutParams.rightMargin = 30;
+        linearLayoutParams.setMargins(dp(4), dp(4), dp(4), dp(4));
 
         final TextView textView = new TextView(this);
 
         textView.setLayoutParams(linearLayoutParams);
-        textView.setBackground(this.getResources().getDrawable(R.drawable.bgpink));
-        textView.setTextColor(this.getResources().getColor(R.color.colorPurple));
+        textView.setBackgroundResource(R.drawable.bg_chip);
+        textView.setTextColor(ContextCompat.getColor(this, R.color.app_on_primary_container));
         textView.setGravity(Gravity.CENTER);
         textView.setText(text);
         textView.setClickable(true);
         textView.setFocusable(true);
-        textView.setTextSize(35);
-
-        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/FredokaOneRegular.ttf");
-
-        textScreen.setTypeface(typeface);
-        textTitle.setTypeface(typeface);
-        editText.setTypeface(typeface);
-        textView.setTypeface(typeface);
-        tvScore.setTypeface(typeface);
-        tvWordCount.setTypeface(typeface);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        textView.setMinWidth(dp(48));
+        textView.setMinHeight(dp(48));
+        textView.setPadding(dp(12), dp(10), dp(12), dp(10));
 
         textView.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("SetTextI18n")
@@ -262,6 +267,18 @@ public class WordMattersActivity extends AppCompatActivity {
         viewParent.addView(textView);
     }
 
+    private void updateHeader() {
+        int total = DStuvung.size();
+        tvWordCount.setText(getString(R.string.vocab_progress, Math.min(tu, total), total));
+        tvScore.setText(getString(R.string.quiz_score, score));
+        progressHTV.setProgressCompat(total == 0 ? 0 : Math.min(tu, total) * 100 / total, true);
+    }
+
+    private int dp(int value) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
+                getResources().getDisplayMetrics()));
+    }
+
     private void doValidate() {
         presCounter = 0;
 
@@ -281,6 +298,7 @@ public class WordMattersActivity extends AppCompatActivity {
                 intent.putExtra("qcount", DStuvung.size());
                 startActivity(intent);
                 finish();
+                return;
             } else {
                 if (tu > 0) doStop();
                 Toast.makeText(WordMattersActivity.this, "Chính xác!!(^.^)", Toast.LENGTH_SHORT).show();
@@ -295,8 +313,7 @@ public class WordMattersActivity extends AppCompatActivity {
                 editText.setText("");
                 score += 5;
                 tu++;
-                tvWordCount.setText("Word: " + tu + "/" + DStuvung.size());
-                tvScore.setText("Score: " + score);
+                updateHeader();
             }
         } else {
             Toast.makeText(WordMattersActivity.this, "Sai rồi!!(T.T)", Toast.LENGTH_SHORT).show();

@@ -50,6 +50,11 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         imghome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (user == null) {
+                    Toast.makeText(ThongTinTaikhoanActivity.this, R.string.account_update_error, Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
                 if(user.getRole() == 0) {
                     Intent intent = new Intent(ThongTinTaikhoanActivity.this, AdminActivity.class);
                     startActivity(intent);
@@ -85,17 +90,17 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     }
     private void CapNhatThongTin()
     {
-        String hoten = tvHoten.getText().toString();
-        String sdt = tvSdt.getText().toString();
-        if(hoten =="" || sdt=="")
+        String hoten = tvHoten.getText().toString().trim();
+        String sdt = tvSdt.getText().toString().trim();
+        if(hoten.isEmpty() || sdt.isEmpty())
         {
-            Toast.makeText(this, "Không hợp lệ", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.account_update_error, Toast.LENGTH_SHORT).show();
         }
         else{
             Boolean checkupdate = DB.capnhatthongtin(DB.iduser,hoten,sdt);
             if(checkupdate == true)
             {
-                Toast.makeText(this, "Câp nhật thành công", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.account_update_success, Toast.LENGTH_SHORT).show();
             }
             else{
                 Toast.makeText(this, "Thất bại", Toast.LENGTH_SHORT).show();
@@ -119,16 +124,21 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     {
         database = Database.initDatabase(ThongTinTaikhoanActivity.this, DATABASE_NAME);
         Cursor cursor = database.rawQuery("SELECT * FROM User WHERE ID_User = ?",new String[]{String.valueOf(DB.iduser)});
-        cursor.moveToNext();
-        String Iduser = cursor.getString(0);
-        String HoTen = cursor.getString(1);
-        int Point = cursor.getInt(2);
-        String Email = cursor.getString(3);
-        String SDT = cursor.getString(4);
-        int Role = cursor.getInt(5);
-        user = new User(Iduser,HoTen,Point,Email,SDT,Role);
+        try {
+            if (cursor.moveToNext()) {
+                String Iduser = cursor.getString(0);
+                String HoTen = cursor.getString(1);
+                int Point = cursor.getInt(2);
+                String Email = cursor.getString(3);
+                String SDT = cursor.getString(4);
+                int Role = cursor.getInt(5);
+                user = new User(Iduser, HoTen, Point, Email, SDT, Role);
 
-        TruyenThongTin();
+                TruyenThongTin();
+            }
+        } finally {
+            cursor.close();
+        }
 
     }
 

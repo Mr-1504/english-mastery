@@ -18,6 +18,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+
 import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
@@ -37,6 +39,8 @@ public class ListeningActivity extends AppCompatActivity {
     RadioButton btnop1, btnop2, btnop3, btnop4;
     Button btnconfirm;
     Button btnquit;
+    Button btnback;
+    LinearProgressIndicator progressLN;
     ImageView imHA;
     private ArrayList<CauLuyenNghe> cauLuyenNghes;
     private MediaPlayer mediaPlayer;
@@ -64,6 +68,12 @@ public class ListeningActivity extends AppCompatActivity {
         Intent intent = getIntent();
         idbo = intent.getIntExtra("Bo", 0);
         cauLuyenNghes = new ArrayList<>();
+        btnback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnquit.performClick();
+            }
+        });
         loadQuestions();
     }
 
@@ -154,6 +164,8 @@ public class ListeningActivity extends AppCompatActivity {
         btnquit = findViewById(R.id.btnQuitLN);
         imHA = findViewById(R.id.imgHinh);
         ImgBT = findViewById(R.id.ImgBT);
+        btnback = findViewById(R.id.btnBackLN);
+        progressLN = findViewById(R.id.progressLN);
     }
 
     public void LayUser() {
@@ -172,12 +184,13 @@ public class ListeningActivity extends AppCompatActivity {
 
     public void shownextquestion(int pos, ArrayList<CauLuyenNghe> cauLuyenNghes) {
         if (pos > 0) doStop();
-        txtquestcount.setText("Question: " + (questioncurrent + 1) + "/" + cauLuyenNghes.size() + "");
+        int total = cauLuyenNghes.size();
+        int current = Math.min(questioncurrent + 1, total);
+        txtquestcount.setText(getString(R.string.quiz_progress, current, total));
+        progressLN.setProgressCompat(total == 0 ? 0 : current * 100 / total, true);
         rdgchoices.clearCheck();
-        btnop1.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        btnop2.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        btnop3.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        btnop4.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
+        resetOptions();
+        setOptionsEnabled(true);
         if (pos == cauLuyenNghes.size()) {
             DB.capnhatdiem(DB.iduser, user.getPoint(), score);
             Intent intent = new Intent(ListeningActivity.this, FinishQuizLSActivity.class);
@@ -185,6 +198,7 @@ public class ListeningActivity extends AppCompatActivity {
             intent.putExtra("questiontrue", questiontrue);
             intent.putExtra("qcount", pos);
             startActivity(intent);
+            finish();
         } else {
             Glide.with(this)
                     .load(cauLuyenNghes.get(pos).getHinhAnhUrl())
@@ -202,6 +216,7 @@ public class ListeningActivity extends AppCompatActivity {
 
     public void checkans() {
         btnconfirm.setEnabled(false);
+        setOptionsEnabled(false);
         if (btnop1.isChecked()) {
             if (1 == answer) {
                 score += 5;
@@ -227,34 +242,33 @@ public class ListeningActivity extends AppCompatActivity {
             }
         }
 
-        txtscore.setText("Score: " + score + "");
+        txtscore.setText(getString(R.string.quiz_score, score));
     }
 
     public void showanswer() {
-        if (1 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_1));
+        resetOptions();
+        RadioButton[] options = {btnop1, btnop2, btnop3, btnop4};
+        for (int i = 0; i < options.length; i++) {
+            if (i + 1 == answer) {
+                options[i].setBackgroundResource(R.drawable.bg_option_correct);
+            } else if (options[i].isChecked()) {
+                options[i].setBackgroundResource(R.drawable.bg_option_wrong);
+            }
         }
-        if (2 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-        }
-        if (3 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-        }
-        if (4 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-        }
+    }
+
+    private void resetOptions() {
+        btnop1.setBackgroundResource(R.drawable.bg_option_selector);
+        btnop2.setBackgroundResource(R.drawable.bg_option_selector);
+        btnop3.setBackgroundResource(R.drawable.bg_option_selector);
+        btnop4.setBackgroundResource(R.drawable.bg_option_selector);
+    }
+
+    private void setOptionsEnabled(boolean enabled) {
+        btnop1.setEnabled(enabled);
+        btnop2.setEnabled(enabled);
+        btnop3.setEnabled(enabled);
+        btnop4.setEnabled(enabled);
     }
 
     private void doStop() {

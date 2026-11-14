@@ -13,7 +13,7 @@ import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
 
 public class AddSapXepCauActivity extends AppCompatActivity {
-    ImageView imgBack, imgAdd;
+    View imgBack, imgAdd;
     EditText edtNoiDung, edtPart1, edtPart2, edtPart3, edtPart4;
     QuestionRepository repository;
     int idBSXC = 0;

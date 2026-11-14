@@ -38,21 +38,24 @@ public class FinishDKActivity extends AppCompatActivity {
         qcount = intent.getIntExtra("qcountDK",0);
         Anhxa();
         if(questiontrue==4){
-            txtfinalqtrue.setText(questiontrue + " / " + qcount);
-            txtcongrats.setText("Your final result: ");
-            txtfinaltext.setText("Almost there!!");
-            txtfinalScore.setText(" "+score);
+            txtfinalqtrue.setText(getString(R.string.finish_score_format, questiontrue, qcount));
+            txtcongrats.setText(R.string.finish_result_label);
+            txtfinaltext.setText(R.string.finish_almost);
+            txtfinalScore.setText(String.valueOf(score));
         }
         if(questiontrue<4){
-            txtfinalqtrue.setText(questiontrue +" / "+ qcount);
-            txtcongrats.setText("Your final result: ");
-            txtfinaltext.setText("Good luck next time !!");
-            txtfinalScore.setText(" "+score);
+            txtfinalqtrue.setText(getString(R.string.finish_score_format, questiontrue, qcount));
+            txtcongrats.setText(R.string.finish_result_label);
+            txtfinaltext.setText(R.string.finish_good_luck);
+            txtfinalScore.setText(String.valueOf(score));
         }
         btnReturn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(FinishDKActivity.this, MainActivity.class));
+                Intent intent = new Intent(FinishDKActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
             }
         });
     }

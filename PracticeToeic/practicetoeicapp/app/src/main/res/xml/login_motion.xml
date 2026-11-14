@@ -92,7 +92,7 @@
                 motion:framePosition="75"/>
 
             <KeyAttribute
-                motion:motionTarget="@+id/teforgotPassword"
+                motion:motionTarget="@+id/textView_forgotPassword"
                 android:alpha="1"
                 motion:framePosition="85"/>
 

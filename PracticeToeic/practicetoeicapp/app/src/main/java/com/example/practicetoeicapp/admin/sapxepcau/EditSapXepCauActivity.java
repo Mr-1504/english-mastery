@@ -14,7 +14,7 @@ import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.sapxepcau.CauSapXep;
 
 public class EditSapXepCauActivity extends AppCompatActivity {
-    ImageView imgBack, imgEdit;
+    View imgBack, imgEdit;
     EditText edtNoiDung, edtPart1, edtPart2, edtPart3, edtPart4;
     QuestionRepository repository;
     int idSXC;

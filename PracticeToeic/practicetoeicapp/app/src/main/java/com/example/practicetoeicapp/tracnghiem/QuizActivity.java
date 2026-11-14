@@ -14,6 +14,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.database.Database;
@@ -33,6 +35,8 @@ public class QuizActivity extends AppCompatActivity {
     RadioButton btnop1, btnop2, btnop3, btnop4;
     Button btnconfirm;
     Button btnquit;
+    Button btnback;
+    LinearProgressIndicator progressTN;
     private ArrayList<CauTracNghiem> cauTracNghiems;
     int questioncurrent = 0;
     int questiontrue = 0;
@@ -57,6 +61,12 @@ public class QuizActivity extends AppCompatActivity {
         txttime.setText(" ");
 
         cauTracNghiems = new ArrayList<>();
+        btnback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnquit.performClick();
+            }
+        });
         loadQuestions();
     }
 
@@ -72,6 +82,8 @@ public class QuizActivity extends AppCompatActivity {
         btnop4 = findViewById(R.id.op4);
         btnconfirm = findViewById(R.id.btnconfirmTN);
         btnquit = findViewById(R.id.btnQuitTN);
+        btnback = findViewById(R.id.btnBackTN);
+        progressTN = findViewById(R.id.progressTN);
     }
 
     private void loadQuestions() {
@@ -125,6 +137,7 @@ public class QuizActivity extends AppCompatActivity {
         btnquit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                finish();
                 startActivity(new Intent(QuizActivity.this, TracNghiemActivity.class));
             }
         });
@@ -145,12 +158,13 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     public void shownextquestion(int pos, ArrayList<CauTracNghiem> cauTracNghiems) {
-        txtquestcount.setText("Question: " + (questioncurrent + 1) + "/" + cauTracNghiems.size() + "");
+        int total = cauTracNghiems.size();
+        int current = Math.min(questioncurrent + 1, total);
+        txtquestcount.setText(getString(R.string.quiz_progress, current, total));
+        progressTN.setProgressCompat(total == 0 ? 0 : current * 100 / total, true);
         rdgchoices.clearCheck();
-        btnop1.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        btnop2.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        btnop3.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
-        btnop4.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
+        resetOptions();
+        setOptionsEnabled(true);
         if (pos == cauTracNghiems.size()) {
             DB.capnhatdiem(DB.iduser, user.getPoint(), score);
             Intent intent = new Intent(QuizActivity.this, FinishQuizActivity.class);
@@ -158,6 +172,7 @@ public class QuizActivity extends AppCompatActivity {
             intent.putExtra("questiontrue", questiontrue);
             intent.putExtra("qcount", pos);
             startActivity(intent);
+            finish();
         } else {
             answer = Integer.valueOf(cauTracNghiems.get(pos).getDapanTrue());
             txtquestion.setText(cauTracNghiems.get(pos).getNoidung());
@@ -170,6 +185,7 @@ public class QuizActivity extends AppCompatActivity {
 
     public void checkans() {
         btnconfirm.setEnabled(false);
+        setOptionsEnabled(false);
         if (btnop1.isChecked()) {
             if (1 == answer) {
                 questiontrue++;
@@ -195,33 +211,32 @@ public class QuizActivity extends AppCompatActivity {
             }
         }
 
-        txtscore.setText("Score: " + score + "");
+        txtscore.setText(getString(R.string.quiz_score, score));
     }
 
     public void showanswer() {
-        if (1 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_1));
+        resetOptions();
+        RadioButton[] options = {btnop1, btnop2, btnop3, btnop4};
+        for (int i = 0; i < options.length; i++) {
+            if (i + 1 == answer) {
+                options[i].setBackgroundResource(R.drawable.bg_option_correct);
+            } else if (options[i].isChecked()) {
+                options[i].setBackgroundResource(R.drawable.bg_option_wrong);
+            }
         }
-        if (2 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-        }
-        if (3 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-        }
-        if (4 == answer) {
-            btnop1.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop2.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop3.setBackground(this.getResources().getDrawable(R.drawable.button_1));
-            btnop4.setBackground(this.getResources().getDrawable(R.drawable.button_2));
-        }
+    }
+
+    private void resetOptions() {
+        btnop1.setBackgroundResource(R.drawable.bg_option_selector);
+        btnop2.setBackgroundResource(R.drawable.bg_option_selector);
+        btnop3.setBackgroundResource(R.drawable.bg_option_selector);
+        btnop4.setBackgroundResource(R.drawable.bg_option_selector);
+    }
+
+    private void setOptionsEnabled(boolean enabled) {
+        btnop1.setEnabled(enabled);
+        btnop2.setEnabled(enabled);
+        btnop3.setEnabled(enabled);
+        btnop4.setEnabled(enabled);
     }
 }

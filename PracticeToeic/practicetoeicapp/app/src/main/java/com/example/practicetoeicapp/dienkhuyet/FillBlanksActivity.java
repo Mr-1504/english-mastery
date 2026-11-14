@@ -3,7 +3,6 @@ package com.example.practicetoeicapp.dienkhuyet;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
@@ -15,6 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
@@ -32,7 +34,8 @@ public class FillBlanksActivity extends AppCompatActivity {
     DatabaseAccess DB;
     TextView txtscoreDK, txtquestcountDK, txtquestionDK, txttimeDK, txtGoiy;
     EditText edtAnswerDK;
-    Button btnconfirm, btnQuit;
+    Button btnconfirm, btnQuit, btnback;
+    LinearProgressIndicator progressDK;
     private ArrayList<CauDienKhuyet> cauDienKhuyets;
     int questioncurrent = 0;
     int questiontrue = 0;
@@ -58,6 +61,12 @@ public class FillBlanksActivity extends AppCompatActivity {
         txttimeDK.setText(" ");
 
         cauDienKhuyets = new ArrayList<>();
+        btnback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnQuit.performClick();
+            }
+        });
         loadQuestions();
     }
 
@@ -97,8 +106,9 @@ public class FillBlanksActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 questioncurrent++;
-                edtAnswerDK.setTextColor(Color.BLACK);
+                edtAnswerDK.setTextColor(ContextCompat.getColor(FillBlanksActivity.this, R.color.app_on_surface));
                 btnconfirm.setEnabled(true);
+                edtAnswerDK.setEnabled(true);
                 edtAnswerDK.setText("");
                 answer = "";
                 shownextquestion(questioncurrent, cauDienKhuyets);
@@ -116,6 +126,7 @@ public class FillBlanksActivity extends AppCompatActivity {
         btnQuit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                finish();
                 startActivity(new Intent(FillBlanksActivity.this, DienKhuyetActivity.class));
             }
         });
@@ -136,8 +147,11 @@ public class FillBlanksActivity extends AppCompatActivity {
     }
 
     public void shownextquestion(int pos, ArrayList<CauDienKhuyet> cauDienKhuyets) {
-        txtquestcountDK.setText("Question: " + (questioncurrent + 1) + "/" + cauDienKhuyets.size() + "");
-        edtAnswerDK.setBackground(this.getResources().getDrawable(R.drawable.bgbtn));
+        int total = cauDienKhuyets.size();
+        int current = Math.min(questioncurrent + 1, total);
+        txtquestcountDK.setText(getString(R.string.quiz_progress, current, total));
+        progressDK.setProgressCompat(total == 0 ? 0 : current * 100 / total, true);
+        edtAnswerDK.setBackgroundResource(R.drawable.bg_input);
 
         if (pos == cauDienKhuyets.size()) {
             DB.capnhatdiem(DB.iduser, user.getPoint(), score);
@@ -146,6 +160,7 @@ public class FillBlanksActivity extends AppCompatActivity {
             intent.putExtra("questiontrueDK", questiontrue);
             intent.putExtra("qcountDK", pos);
             startActivity(intent);
+            finish();
         } else {
             answer = cauDienKhuyets.get(pos).getDapan();
             txtGoiy.setText(cauDienKhuyets.get(pos).getGoiy());
@@ -155,22 +170,23 @@ public class FillBlanksActivity extends AppCompatActivity {
 
     public void showanswer() {
         edtAnswerDK.setText(answer);
-        edtAnswerDK.setTextColor(Color.GREEN);
+        edtAnswerDK.setTextColor(ContextCompat.getColor(this, R.color.app_success));
         edtAnswerDK.clearFocus();
     }
 
     public void checkAnswer() {
         btnconfirm.setEnabled(false);
+        edtAnswerDK.setEnabled(false);
         if (answer.equals(edtAnswerDK.getText().toString())) {
             Toast.makeText(this, "Đáp án chính xác", Toast.LENGTH_SHORT).show();
-            edtAnswerDK.setTextColor(Color.GREEN);
+            edtAnswerDK.setTextColor(ContextCompat.getColor(this, R.color.app_success));
             questiontrue++;
             score += 5;
-            txtscoreDK.setText("Score: " + score);
+            txtscoreDK.setText(getString(R.string.quiz_score, score));
             edtAnswerDK.clearFocus();
         } else {
             Toast.makeText(this, "Sai rồi", Toast.LENGTH_SHORT).show();
-            edtAnswerDK.setTextColor(Color.RED);
+            edtAnswerDK.setTextColor(ContextCompat.getColor(this, R.color.app_error));
             edtAnswerDK.startAnimation(shakeError());
             edtAnswerDK.clearFocus();
         }
@@ -192,5 +208,7 @@ public class FillBlanksActivity extends AppCompatActivity {
         btnconfirm = findViewById(R.id.btnconfirmDK);
         txtGoiy = findViewById(R.id.textviewGoiy);
         btnQuit = findViewById(R.id.btnQuitDK);
+        btnback = findViewById(R.id.btnBackDK);
+        progressDK = findViewById(R.id.progressDK);
     }
 }
