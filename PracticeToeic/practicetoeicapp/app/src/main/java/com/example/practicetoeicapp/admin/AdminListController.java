@@ -42,6 +42,12 @@ public class AdminListController {
         addButton.setOnClickListener(listener);
     }
 
+    public void showLoading() {
+        progressBar.setVisibility(View.VISIBLE);
+        listView.setVisibility(View.GONE);
+        emptyState.setVisibility(View.GONE);
+    }
+
     public void showContent(boolean empty) {
         progressBar.setVisibility(View.GONE);
         listView.setVisibility(empty ? View.GONE : View.VISIBLE);

@@ -34,7 +34,6 @@ public class AdminSapXepCauActivity extends AppCompatActivity {
         listSapXepCau = new ArrayList<>();
         adapter = new AdminSapXepCauAdapter(AdminSapXepCauActivity.this, listSapXepCau);
         listController.listView.setAdapter(adapter);
-        loadSapXepCau();
 
         listController.bindBack(v -> finish());
         listController.bindAdd(v -> {
@@ -44,7 +43,14 @@ public class AdminSapXepCauActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadSapXepCau();
+    }
+
     private void loadSapXepCau() {
+        listController.showLoading();
         repository.loadSapXepCau(idbo, new QuestionRepository.DataCallback<List<CauSapXep>>() {
             @Override
             public void onSuccess(List<CauSapXep> data) {

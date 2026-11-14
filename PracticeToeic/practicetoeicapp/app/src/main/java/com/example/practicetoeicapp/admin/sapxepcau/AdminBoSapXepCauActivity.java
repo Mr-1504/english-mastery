@@ -36,7 +36,6 @@ public class AdminBoSapXepCauActivity extends AppCompatActivity {
         adapter = new BoHocTapAdapter(AdminBoSapXepCauActivity.this,
                 R.layout.row_bosapxepcau, listBoSapXepCau);
         listController.listView.setAdapter(adapter);
-        loadBoSapXepCau();
 
         listController.bindBack(v -> finish());
         listController.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -49,7 +48,14 @@ public class AdminBoSapXepCauActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBoSapXepCau();
+    }
+
     private void loadBoSapXepCau() {
+        listController.showLoading();
         repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
             @Override
             public void onSuccess(List<BoHocTap> data) {

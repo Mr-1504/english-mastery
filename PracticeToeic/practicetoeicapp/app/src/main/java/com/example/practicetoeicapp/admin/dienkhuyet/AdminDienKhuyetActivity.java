@@ -34,7 +34,6 @@ public class AdminDienKhuyetActivity extends AppCompatActivity {
         listDienKhuyet = new ArrayList<>();
         adapter = new AdminDienKhuyetAdapter(AdminDienKhuyetActivity.this, listDienKhuyet);
         listController.listView.setAdapter(adapter);
-        loadDienKhuyet();
 
         listController.bindBack(v -> finish());
         listController.bindAdd(v -> {
@@ -44,7 +43,14 @@ public class AdminDienKhuyetActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadDienKhuyet();
+    }
+
     private void loadDienKhuyet() {
+        listController.showLoading();
         repository.loadDienKhuyet(idbo, new QuestionRepository.DataCallback<List<CauDienKhuyet>>() {
             @Override
             public void onSuccess(List<CauDienKhuyet> data) {

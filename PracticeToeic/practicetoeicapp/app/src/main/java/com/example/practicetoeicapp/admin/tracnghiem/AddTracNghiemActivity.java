@@ -1,18 +1,17 @@
 package com.example.practicetoeicapp.admin.tracnghiem;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 
@@ -48,9 +47,7 @@ public class AddTracNghiemActivity extends AppCompatActivity {
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(AddTracNghiemActivity.this, AdminTracNghiemActivity.class);
-                intent.putExtra("idBoTracNghiem", idBTN);
-                startActivity(intent);
+                finish();
             }
         });
         imgAdd.setOnClickListener(new View.OnClickListener() {
@@ -63,27 +60,28 @@ public class AddTracNghiemActivity extends AppCompatActivity {
                 String dapanD = edtDapAnD.getText().toString().trim();
                 if (noidung.isEmpty() || dapanA.isEmpty() || dapanB.isEmpty()
                         || dapanC.isEmpty() || dapanD.isEmpty()) {
-                    Toast.makeText(AddTracNghiemActivity.this,
-                            "Chưa điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                    UiFeedback.showTransient(AddTracNghiemActivity.this,
+                            getString(R.string.feedback_required_fields), false);
                     return;
                 }
                 String dapanTrue = String.valueOf(spnDapAnTrue.getSelectedItemPosition() + 1);
+                final AlertDialog loading = UiFeedback.showLoading(AddTracNghiemActivity.this,
+                        R.string.feedback_saving);
                 repository.createTracNghiem(idBTN, noidung, dapanA, dapanB, dapanC, dapanD,
                         dapanTrue, new QuestionRepository.DataCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer data) {
-                                Toast.makeText(AddTracNghiemActivity.this,
-                                        "Thêm thành công", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(AddTracNghiemActivity.this,
-                                        AdminTracNghiemActivity.class);
-                                intent.putExtra("idBoTracNghiem", idBTN);
-                                startActivity(intent);
+                                UiFeedback.dismiss(loading);
+                                UiFeedback.showTransient(AddTracNghiemActivity.this,
+                                        getString(R.string.feedback_add_success), true);
+                                finish();
                             }
 
                             @Override
                             public void onError(Exception e) {
-                                Toast.makeText(AddTracNghiemActivity.this,
-                                        "Thêm thất bại", Toast.LENGTH_SHORT).show();
+                                UiFeedback.dismiss(loading);
+                                UiFeedback.showTransient(AddTracNghiemActivity.this,
+                                        getString(R.string.feedback_add_failed), false);
                             }
                         });
             }

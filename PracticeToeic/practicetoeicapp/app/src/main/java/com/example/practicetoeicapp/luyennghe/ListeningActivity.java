@@ -14,7 +14,6 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -26,6 +25,7 @@ import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.taikhoan.User;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,9 +84,8 @@ public class ListeningActivity extends AppCompatActivity {
                 cauLuyenNghes.clear();
                 cauLuyenNghes.addAll(data);
                 if (cauLuyenNghes.isEmpty()) {
-                    Toast.makeText(ListeningActivity.this,
-                            "Nội dung sẽ cập nhật cập nhật trong thời gian sớm nhất! Mong mọi người thông càm!!",
-                            Toast.LENGTH_LONG).show();
+                    UiFeedback.showTransient(ListeningActivity.this,
+                            getString(R.string.question_set_empty), false);
                     finish();
                     startActivity(new Intent(ListeningActivity.this, LuyenNgheActivity.class));
                 } else {
@@ -96,8 +95,8 @@ public class ListeningActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(ListeningActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                UiFeedback.showError(ListeningActivity.this,
+                        getString(R.string.admin_list_error));
             }
         });
     }
@@ -217,31 +216,15 @@ public class ListeningActivity extends AppCompatActivity {
     public void checkans() {
         btnconfirm.setEnabled(false);
         setOptionsEnabled(false);
-        if (btnop1.isChecked()) {
-            if (1 == answer) {
-                score += 5;
-                questiontrue++;
-            }
+        boolean correct = (btnop1.isChecked() && answer == 1)
+                || (btnop2.isChecked() && answer == 2)
+                || (btnop3.isChecked() && answer == 3)
+                || (btnop4.isChecked() && answer == 4);
+        if (correct) {
+            score += 5;
+            questiontrue++;
         }
-        if (btnop2.isChecked()) {
-            if (2 == answer) {
-                score += 5;
-                questiontrue++;
-            }
-        }
-        if (btnop3.isChecked()) {
-            if (3 == answer) {
-                score += 5;
-                questiontrue++;
-            }
-        }
-        if (btnop4.isChecked()) {
-            if (4 == answer) {
-                score += 5;
-                questiontrue++;
-            }
-        }
-
+        UiFeedback.showAnswer(this, correct);
         txtscore.setText(getString(R.string.quiz_score, score));
     }
 

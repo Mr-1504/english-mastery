@@ -3,19 +3,18 @@ package com.example.practicetoeicapp.taikhoan;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.database.DatabaseAccess;
-import com.example.practicetoeicapp.singletonpattern.MessageObject;
+import com.example.practicetoeicapp.ui.UiFeedback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -34,7 +33,7 @@ public class SignupActivity extends AppCompatActivity {
     FirebaseDatabase rootNode;
     DatabaseReference reference;
     DatabaseAccess DB;
-    private MessageObject messageObject = MessageObject.getInstance();
+    private AlertDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,10 +63,8 @@ public class SignupActivity extends AppCompatActivity {
 
                 if(hoten.equals("")||email.equals("")||sdt.equals("")||matkhau.equals(""))
                 {
-                    messageObject.ShowDialogMessage(Gravity.CENTER,
-                            SignupActivity.this,
-                            "Vui lòng điền đầy đủ thông tin của bạn!!",
-                            0);
+                    UiFeedback.showTransient(SignupActivity.this,
+                            getString(R.string.auth_signup_required), false);
                 }
                 else{
                     if(matkhau.equals(xacnhanmatkhau)){
@@ -75,6 +72,8 @@ public class SignupActivity extends AppCompatActivity {
                         Boolean kiemtrataikhoan = DB.checktaikhoan(email);
                         if(kiemtrataikhoan == false)
                         {
+                            loadingDialog = UiFeedback.showLoading(SignupActivity.this,
+                                    R.string.feedback_loading);
                             mAuth.createUserWithEmailAndPassword(email, matkhau).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
 
                                         @Override
@@ -84,7 +83,6 @@ public class SignupActivity extends AppCompatActivity {
                                                 DB.open();
                                                 Boolean insert = DB.insertData(mAuth.getCurrentUser().getUid(),hoten,email,sdt,0, 1);
                                                 DB.close();
-                                                Toast.makeText(SignupActivity.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
 
                                                 // if the user created intent to login activity
                                                 rootNode= FirebaseDatabase.getInstance();
@@ -92,32 +90,31 @@ public class SignupActivity extends AppCompatActivity {
                                                 User newuser = new User(mAuth.getCurrentUser().getUid(), hoten,0,email,sdt, 1);
                                                 reference.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(newuser);
 
+                                                UiFeedback.dismiss(loadingDialog);
+                                                UiFeedback.showTransient(SignupActivity.this,
+                                                        getString(R.string.auth_signup_success), true);
                                                 Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
                                                 startActivity(intent);
+                                                finish();
                                             }
                                             else {
-                                                messageObject.ShowDialogMessage(Gravity.CENTER,
-                                                        SignupActivity.this,
-                                                        "Đăng ký thất bại!!",
-                                                        0);
+                                                UiFeedback.dismiss(loadingDialog);
+                                                UiFeedback.showError(SignupActivity.this,
+                                                        getString(R.string.auth_signup_failed));
                                             }
                                         }
                                     });
                         }
                         else{
-                            messageObject.ShowDialogMessage(Gravity.CENTER,
-                                    SignupActivity.this,
-                                    "Email đã được đăng ký!!",
-                                    0);
+                            UiFeedback.showTransient(SignupActivity.this,
+                                    getString(R.string.auth_email_exists), false);
                         }
 
 
                     }
                     else{
-                        messageObject.ShowDialogMessage(Gravity.CENTER,
-                                SignupActivity.this,
-                                "Xác nhận lại, mật khẩu không trùng khớp!!",
-                                0);
+                        UiFeedback.showTransient(SignupActivity.this,
+                                getString(R.string.auth_password_mismatch), false);
                         edtMatKhau.setText("");
                         edtXacNhan.setText("");
                     }
@@ -126,6 +123,12 @@ public class SignupActivity extends AppCompatActivity {
         });
 
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        UiFeedback.dismiss(loadingDialog);
+    }
+
     private void AnhXa()
     {
         tvDangNhap = (TextView) findViewById(R.id.textView_login);

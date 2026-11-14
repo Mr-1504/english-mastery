@@ -32,14 +32,20 @@ public class AdminBoHocTapActivity extends AppCompatActivity {
         listBHT = new ArrayList<>();
         adapter = new AdminBoHocTapAdapter(AdminBoHocTapActivity.this, listBHT);
         listController.listView.setAdapter(adapter);
-        loadBoHocTap();
 
         listController.bindBack(v -> finish());
         listController.bindAdd(v ->
                 startActivity(new Intent(AdminBoHocTapActivity.this, AddBoHocTapActivity.class)));
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBoHocTap();
+    }
+
     private void loadBoHocTap() {
+        listController.showLoading();
         repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
             @Override
             public void onSuccess(List<BoHocTap> data) {

@@ -6,12 +6,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,16 +70,15 @@ public class DSTuVungActivity extends AppCompatActivity {
                 DStuvung.addAll(data);
                 adapter.notifyDataSetChanged();
                 if (DStuvung.isEmpty()) {
-                    Toast.makeText(DSTuVungActivity.this,
-                            "Nội dung sẽ cập nhật cập nhật trong thời gian sớm nhất! Mong mọi người thông càm!!",
-                            Toast.LENGTH_LONG).show();
+                    UiFeedback.showTransient(DSTuVungActivity.this,
+                            getString(R.string.question_set_empty), false);
                 }
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(DSTuVungActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                UiFeedback.showError(DSTuVungActivity.this,
+                        getString(R.string.admin_list_error));
             }
         });
     }

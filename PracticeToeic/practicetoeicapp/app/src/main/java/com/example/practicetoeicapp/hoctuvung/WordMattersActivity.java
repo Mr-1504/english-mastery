@@ -18,7 +18,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -32,6 +31,7 @@ import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.luyennghe.MediaPlayerUtils;
 import com.example.practicetoeicapp.taikhoan.User;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,9 +99,8 @@ public class WordMattersActivity extends AppCompatActivity {
                 DStuvung.clear();
                 DStuvung.addAll(data);
                 if (DStuvung.isEmpty()) {
-                    Toast.makeText(WordMattersActivity.this,
-                            "Nội dung sẽ cập nhật cập nhật trong thời gian sớm nhất! Mong mọi người thông càm!!",
-                            Toast.LENGTH_LONG).show();
+                    UiFeedback.showTransient(WordMattersActivity.this,
+                            getString(R.string.question_set_empty), false);
                     finish();
                     startActivity(new Intent(WordMattersActivity.this, HocTuVungActivity.class));
                 } else {
@@ -111,8 +110,8 @@ public class WordMattersActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(WordMattersActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                UiFeedback.showError(WordMattersActivity.this,
+                        getString(R.string.admin_list_error));
             }
         });
     }
@@ -291,7 +290,6 @@ public class WordMattersActivity extends AppCompatActivity {
             if (tu == DStuvung.size()) {
                 score += 5;
                 DB.capnhatdiem(DB.iduser, user.getPoint(), score);
-                Toast.makeText(WordMattersActivity.this, "Hoàn Thành Xuất Sắc!!~(^.^)~", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(WordMattersActivity.this, FinishHTVActivity.class);
                 intent.putExtra("score", score);
                 intent.putExtra("questiontrue", tu);
@@ -301,7 +299,7 @@ public class WordMattersActivity extends AppCompatActivity {
                 return;
             } else {
                 if (tu > 0) doStop();
-                Toast.makeText(WordMattersActivity.this, "Chính xác!!(^.^)", Toast.LENGTH_SHORT).show();
+                UiFeedback.showAnswer(WordMattersActivity.this, true);
                 showWord(tu);
                 textQuestion.setText("(" + DStuvung.get(tu).getLoaitu() + ") - " + "(" + DStuvung.get(tu).getDichnghia() + ")");
                 textAnswer = DStuvung.get(tu).getDapan();
@@ -316,7 +314,7 @@ public class WordMattersActivity extends AppCompatActivity {
                 updateHeader();
             }
         } else {
-            Toast.makeText(WordMattersActivity.this, "Sai rồi!!(T.T)", Toast.LENGTH_SHORT).show();
+            UiFeedback.showAnswer(WordMattersActivity.this, false);
             editText.setText("");
         }
 

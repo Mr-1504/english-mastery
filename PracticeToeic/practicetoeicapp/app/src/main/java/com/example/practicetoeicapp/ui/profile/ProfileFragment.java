@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -22,6 +21,7 @@ import com.example.practicetoeicapp.taikhoan.LoginActivity;
 import com.example.practicetoeicapp.taikhoan.RankingActivity;
 import com.example.practicetoeicapp.taikhoan.ThongTinTaikhoanActivity;
 import com.example.practicetoeicapp.theme.ThemePrefs;
+import com.example.practicetoeicapp.ui.UiFeedback;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -153,7 +153,7 @@ public class ProfileFragment extends Fragment {
         try {
             startActivity(Intent.createChooser(intent, getString(R.string.email_chooser)));
         } catch (Exception exception) {
-            Toast.makeText(requireContext(), exception.getMessage(), Toast.LENGTH_SHORT).show();
+            UiFeedback.showTransient(requireActivity(), exception.getMessage(), false);
         }
     }
 }

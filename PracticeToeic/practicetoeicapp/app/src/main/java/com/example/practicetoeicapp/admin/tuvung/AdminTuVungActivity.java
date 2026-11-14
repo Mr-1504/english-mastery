@@ -34,7 +34,6 @@ public class AdminTuVungActivity extends AppCompatActivity {
         listTuVung = new ArrayList<>();
         adapter = new AdminTuVungAdapter(AdminTuVungActivity.this, listTuVung);
         listController.listView.setAdapter(adapter);
-        loadTuVung();
 
         listController.bindBack(v -> finish());
         listController.bindAdd(v -> {
@@ -44,7 +43,14 @@ public class AdminTuVungActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTuVung();
+    }
+
     private void loadTuVung() {
+        listController.showLoading();
         repository.loadTuVung(idbo, new QuestionRepository.DataCallback<List<TuVung>>() {
             @Override
             public void onSuccess(List<TuVung> data) {

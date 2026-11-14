@@ -36,7 +36,6 @@ public class AdminBoTuVungActivity extends AppCompatActivity {
         adapter = new BoHocTapAdapter(AdminBoTuVungActivity.this,
                 R.layout.row_botuvung, listBoTuVung);
         listController.listView.setAdapter(adapter);
-        loadBoTuVung();
 
         listController.bindBack(v -> finish());
         listController.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -49,7 +48,14 @@ public class AdminBoTuVungActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBoTuVung();
+    }
+
     private void loadBoTuVung() {
+        listController.showLoading();
         repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
             @Override
             public void onSuccess(List<BoHocTap> data) {

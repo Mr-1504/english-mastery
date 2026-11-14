@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -21,9 +20,9 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
-import com.example.practicetoeicapp.singletonpattern.MessageObject;
 import com.example.practicetoeicapp.taikhoan.LoginActivity;
 import com.example.practicetoeicapp.taikhoan.User;
+import com.example.practicetoeicapp.ui.UiFeedback;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,7 +31,6 @@ import com.google.firebase.auth.FirebaseUser;
 public class MainActivity extends AppCompatActivity {
 
     private static final String DATABASE_NAME = "HocNgonNgu.db";
-    private final MessageObject messageObject = MessageObject.getInstance();
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
     private SQLiteDatabase database;
@@ -146,8 +144,7 @@ public class MainActivity extends AppCompatActivity {
             if (user != null && user.getRole() == 0) {
                 startActivity(new Intent(this, AdminActivity.class));
             } else {
-                messageObject.ShowDialogMessage(Gravity.CENTER, this,
-                        "KHÔNG THỂ TRUY CẬP!! Tài khoản của bạn không phải Quản Lý!!", 0);
+                UiFeedback.showError(this, getString(R.string.admin_role_denied));
             }
             return true;
         }

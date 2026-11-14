@@ -1,19 +1,18 @@
 package com.example.practicetoeicapp.admin.tracnghiem;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.tracnghiem.CauTracNghiem;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 
@@ -67,10 +66,7 @@ public class EditTracNghiemActivity extends AppCompatActivity {
                 imgBack.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(EditTracNghiemActivity.this,
-                                AdminTracNghiemActivity.class);
-                        intent.putExtra("idBoTracNghiem", tracNghiem.getIdbo());
-                        startActivity(intent);
+                        finish();
                     }
                 });
                 imgEdit.setOnClickListener(new View.OnClickListener() {
@@ -83,28 +79,29 @@ public class EditTracNghiemActivity extends AppCompatActivity {
                         String dapanD = edtDapAnD.getText().toString().trim();
                         if (noidung.isEmpty() || dapanA.isEmpty() || dapanB.isEmpty()
                                 || dapanC.isEmpty() || dapanD.isEmpty()) {
-                            Toast.makeText(EditTracNghiemActivity.this,
-                                    "Chưa điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                            UiFeedback.showTransient(EditTracNghiemActivity.this,
+                                    getString(R.string.feedback_required_fields), false);
                             return;
                         }
                         String dapanTrue = String.valueOf(spnDapAnTrue.getSelectedItemPosition() + 1);
+                        final AlertDialog loading = UiFeedback.showLoading(EditTracNghiemActivity.this,
+                                R.string.feedback_saving);
                         repository.updateTracNghiem(tracNghiem.getIdcau(), tracNghiem.getIdbo(),
                                 noidung, dapanA, dapanB, dapanC, dapanD, dapanTrue,
                                 new QuestionRepository.DataCallback<Void>() {
                                     @Override
                                     public void onSuccess(Void data) {
-                                        Toast.makeText(EditTracNghiemActivity.this,
-                                                "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(EditTracNghiemActivity.this,
-                                                AdminTracNghiemActivity.class);
-                                        intent.putExtra("idBoTracNghiem", tracNghiem.getIdbo());
-                                        startActivity(intent);
+                                        UiFeedback.dismiss(loading);
+                                        UiFeedback.showTransient(EditTracNghiemActivity.this,
+                                                getString(R.string.feedback_update_success), true);
+                                        finish();
                                     }
 
                                     @Override
                                     public void onError(Exception e) {
-                                        Toast.makeText(EditTracNghiemActivity.this,
-                                                "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                                        UiFeedback.dismiss(loading);
+                                        UiFeedback.showTransient(EditTracNghiemActivity.this,
+                                                getString(R.string.feedback_update_failed), false);
                                     }
                                 });
                     }
@@ -113,9 +110,9 @@ public class EditTracNghiemActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(EditTracNghiemActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
-                finish();
+                UiFeedback.showInfo(EditTracNghiemActivity.this,
+                        getString(R.string.feedback_load_failed),
+                        EditTracNghiemActivity.this::finish);
             }
         });
     }

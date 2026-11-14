@@ -94,7 +94,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
-            android:text="Ứng dụng học tiếng Anh"
+            android:text="Ứng dụng học tiếng Anh của mèn mén"
             android:textColor="@color/app_on_surface"
             android:textSize="22sp" />
 
@@ -121,6 +121,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
+                android:paddingStart="48dp"
+                android:paddingEnd="16dp"
                 android:textColor="@color/app_on_surface"
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -139,6 +141,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
+                android:paddingStart="48dp"
+                android:paddingEnd="48dp"
                 android:textColor="@color/app_on_surface"
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>

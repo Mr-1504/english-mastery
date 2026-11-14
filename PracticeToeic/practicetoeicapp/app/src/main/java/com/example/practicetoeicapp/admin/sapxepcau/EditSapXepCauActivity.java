@@ -1,17 +1,16 @@
 package com.example.practicetoeicapp.admin.sapxepcau;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.sapxepcau.CauSapXep;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 public class EditSapXepCauActivity extends AppCompatActivity {
     View imgBack, imgEdit;
@@ -47,10 +46,7 @@ public class EditSapXepCauActivity extends AppCompatActivity {
                 imgBack.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(EditSapXepCauActivity.this,
-                                AdminSapXepCauActivity.class);
-                        intent.putExtra("idBoSapXepCau", sapxepCau.getIdbo());
-                        startActivity(intent);
+                        finish();
                     }
                 });
                 imgEdit.setOnClickListener(new View.OnClickListener() {
@@ -63,32 +59,33 @@ public class EditSapXepCauActivity extends AppCompatActivity {
                         String part4 = edtPart4.getText().toString().trim();
                         if (dapan.isEmpty() || part1.isEmpty() || part2.isEmpty()
                                 || part3.isEmpty() || part4.isEmpty()) {
-                            Toast.makeText(EditSapXepCauActivity.this,
-                                    "Chưa điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                            UiFeedback.showTransient(EditSapXepCauActivity.this,
+                                    getString(R.string.feedback_required_fields), false);
                             return;
                         }
                         if (!checkPartInResult(dapan, part1, part2, part3, part4)) {
-                            Toast.makeText(EditSapXepCauActivity.this,
-                                    "Vui lòng nhập đúng nội dung tách của câu", Toast.LENGTH_SHORT).show();
+                            UiFeedback.showTransient(EditSapXepCauActivity.this,
+                                    getString(R.string.feedback_invalid_parts), false);
                             return;
                         }
+                        final AlertDialog loading = UiFeedback.showLoading(EditSapXepCauActivity.this,
+                                R.string.feedback_saving);
                         repository.updateSapXepCau(sapxepCau.getIdcau(), sapxepCau.getIdbo(),
                                 dapan, part1, part2, part3, part4,
                                 new QuestionRepository.DataCallback<Void>() {
                                     @Override
                                     public void onSuccess(Void data) {
-                                        Toast.makeText(EditSapXepCauActivity.this,
-                                                "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(EditSapXepCauActivity.this,
-                                                AdminSapXepCauActivity.class);
-                                        intent.putExtra("idBoSapXepCau", sapxepCau.getIdbo());
-                                        startActivity(intent);
+                                        UiFeedback.dismiss(loading);
+                                        UiFeedback.showTransient(EditSapXepCauActivity.this,
+                                                getString(R.string.feedback_update_success), true);
+                                        finish();
                                     }
 
                                     @Override
                                     public void onError(Exception e) {
-                                        Toast.makeText(EditSapXepCauActivity.this,
-                                                "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                                        UiFeedback.dismiss(loading);
+                                        UiFeedback.showTransient(EditSapXepCauActivity.this,
+                                                getString(R.string.feedback_update_failed), false);
                                     }
                                 });
                     }
@@ -97,9 +94,9 @@ public class EditSapXepCauActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(EditSapXepCauActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
-                finish();
+                UiFeedback.showInfo(EditSapXepCauActivity.this,
+                        getString(R.string.feedback_load_failed),
+                        EditSapXepCauActivity.this::finish);
             }
         });
     }

@@ -1,5 +1,6 @@
 package com.example.practicetoeicapp.admin.sapxepcau;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -8,10 +9,10 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
+import com.example.practicetoeicapp.ui.UiFeedback;
 import com.example.practicetoeicapp.sapxepcau.CauSapXep;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -76,15 +77,15 @@ public class AdminSapXepCauAdapter extends BaseAdapter {
                                 new QuestionRepository.DataCallback<Void>() {
                                     @Override
                                     public void onSuccess(Void data) {
-                                        Toast.makeText(context, R.string.admin_delete_success,
-                                                Toast.LENGTH_SHORT).show();
+                                        UiFeedback.showTransient((Activity) context,
+                                                context.getString(R.string.admin_delete_success), true);
                                         reload(cauSapXep.getIdbo());
                                     }
 
                                     @Override
                                     public void onError(Exception e) {
-                                        Toast.makeText(context, R.string.admin_delete_error,
-                                                Toast.LENGTH_SHORT).show();
+                                        UiFeedback.showTransient((Activity) context,
+                                                context.getString(R.string.admin_delete_error), false);
                                     }
                                 }))
                 .show();
@@ -101,7 +102,8 @@ public class AdminSapXepCauAdapter extends BaseAdapter {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(context, R.string.admin_list_error, Toast.LENGTH_SHORT).show();
+                UiFeedback.showTransient((Activity) context,
+                        context.getString(R.string.admin_list_error), false);
             }
         });
     }

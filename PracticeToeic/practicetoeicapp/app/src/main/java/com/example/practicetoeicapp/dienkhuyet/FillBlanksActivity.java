@@ -11,7 +11,6 @@ import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -23,6 +22,7 @@ import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.taikhoan.User;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,9 +77,8 @@ public class FillBlanksActivity extends AppCompatActivity {
                 cauDienKhuyets.clear();
                 cauDienKhuyets.addAll(data);
                 if (cauDienKhuyets.isEmpty()) {
-                    Toast.makeText(FillBlanksActivity.this,
-                            "Nội dung sẽ cập nhật cập nhật trong thời gian sớm nhất! Mong mọi người thông càm!!",
-                            Toast.LENGTH_LONG).show();
+                    UiFeedback.showTransient(FillBlanksActivity.this,
+                            getString(R.string.question_set_empty), false);
                     finish();
                     startActivity(new Intent(FillBlanksActivity.this, DienKhuyetActivity.class));
                 } else {
@@ -89,8 +88,8 @@ public class FillBlanksActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(FillBlanksActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                UiFeedback.showError(FillBlanksActivity.this,
+                        getString(R.string.admin_list_error));
             }
         });
     }
@@ -178,14 +177,14 @@ public class FillBlanksActivity extends AppCompatActivity {
         btnconfirm.setEnabled(false);
         edtAnswerDK.setEnabled(false);
         if (answer.equals(edtAnswerDK.getText().toString())) {
-            Toast.makeText(this, "Đáp án chính xác", Toast.LENGTH_SHORT).show();
+            UiFeedback.showAnswer(this, true);
             edtAnswerDK.setTextColor(ContextCompat.getColor(this, R.color.app_success));
             questiontrue++;
             score += 5;
             txtscoreDK.setText(getString(R.string.quiz_score, score));
             edtAnswerDK.clearFocus();
         } else {
-            Toast.makeText(this, "Sai rồi", Toast.LENGTH_SHORT).show();
+            UiFeedback.showAnswer(this, false);
             edtAnswerDK.setTextColor(ContextCompat.getColor(this, R.color.app_error));
             edtAnswerDK.startAnimation(shakeError());
             edtAnswerDK.clearFocus();

@@ -3,14 +3,13 @@ package com.example.practicetoeicapp.taikhoan;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 
@@ -19,8 +18,8 @@ import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.notify.MyService;
-import com.example.practicetoeicapp.singletonpattern.MessageObject;
 import com.example.practicetoeicapp.theme.ThemePrefs;
+import com.example.practicetoeicapp.ui.UiFeedback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -40,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     FirebaseDatabase rootNode; //f_instanse
     DatabaseReference userref; //f_db
     private FirebaseAuth mAuth;
-    private final MessageObject messageObject = MessageObject.getInstance();
+    private AlertDialog loadingDialog;
 
     public static LoginActivity instance;
 
@@ -69,23 +68,19 @@ public class LoginActivity extends AppCompatActivity {
 
                 // validations for input email and password // check th trong
                 if (TextUtils.isEmpty(email)) {
-                    messageObject.ShowDialogMessage(Gravity.CENTER,
-                            LoginActivity.this,
-                            "Hãy nhập Email của bạn!!",
-                            0);
+                    UiFeedback.showTransient(LoginActivity.this,
+                            getString(R.string.auth_email_required), false);
                     return;
                 }
 
                 if (TextUtils.isEmpty(matkhau)) {
-                    messageObject.ShowDialogMessage(Gravity.CENTER,
-                            LoginActivity.this,
-                            "Hãy nhập mật khẩu của bạn!!",
-                            0);
+                    UiFeedback.showTransient(LoginActivity.this,
+                            getString(R.string.auth_password_required), false);
                     return;
                 }
 
-                // signin existing user
-
+                loadingDialog = UiFeedback.showLoading(LoginActivity.this,
+                        R.string.feedback_loading);
                 mAuth.signInWithEmailAndPassword(email, matkhau)
                         .addOnCompleteListener(
                                 new OnCompleteListener<AuthResult>() {
@@ -94,11 +89,6 @@ public class LoginActivity extends AppCompatActivity {
                                             @NonNull Task<AuthResult> task)
                                     {
                                         if (task.isSuccessful()) {
-                                            Toast.makeText(getApplicationContext(),
-                                                    "Đăng nhập thành công!!",
-                                                    Toast.LENGTH_LONG)
-                                                    .show();
-
                                             //notify
                                            // Intent intent;
                                             //intent = new Intent(LoginActivity.this, MyService.class);
@@ -111,8 +101,24 @@ public class LoginActivity extends AppCompatActivity {
                                             userref.child("role").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
                                                 @Override
                                                 public void onComplete(@NonNull @NotNull Task<DataSnapshot> task) {
-                                                    int roleValue = Integer.parseInt(task.getResult().getValue().toString());
-
+                                                    if (!task.isSuccessful()
+                                                            || task.getResult().getValue() == null) {
+                                                        UiFeedback.dismiss(loadingDialog);
+                                                        UiFeedback.showError(LoginActivity.this,
+                                                                getString(R.string.auth_login_failed));
+                                                        return;
+                                                    }
+                                                    int roleValue;
+                                                    try {
+                                                        roleValue = Integer.parseInt(
+                                                                task.getResult().getValue().toString());
+                                                    } catch (NumberFormatException e) {
+                                                        UiFeedback.dismiss(loadingDialog);
+                                                        UiFeedback.showError(LoginActivity.this,
+                                                                getString(R.string.auth_login_failed));
+                                                        return;
+                                                    }
+                                                    UiFeedback.dismiss(loadingDialog);
                                                     Intent intent;
                                                     if (roleValue == 0) {
                                                         intent = new Intent(LoginActivity.this, AdminActivity.class);
@@ -121,15 +127,15 @@ public class LoginActivity extends AppCompatActivity {
                                                         intent = new Intent(LoginActivity.this, MainActivity.class);
                                                     }
                                                     startActivity(intent);
+                                                    finish();
                                                 }
                                             });
                                         }
                                         else {
                                             // sign-in failed
-                                            messageObject.ShowDialogMessage(Gravity.CENTER,
-                                                    LoginActivity.this,
-                                                    "Sai Email hoặc mật khẩu!!",
-                                                    0);
+                                            UiFeedback.dismiss(loadingDialog);
+                                            UiFeedback.showError(LoginActivity.this,
+                                                    getString(R.string.auth_login_failed));
                                         }
                                     }
                                 });
@@ -172,5 +178,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        UiFeedback.dismiss(loadingDialog);
     }
 }

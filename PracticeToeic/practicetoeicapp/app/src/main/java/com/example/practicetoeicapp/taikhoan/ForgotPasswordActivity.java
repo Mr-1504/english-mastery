@@ -3,18 +3,17 @@ package com.example.practicetoeicapp.taikhoan;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.singletonpattern.MessageObject;
+import com.example.practicetoeicapp.ui.UiFeedback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -27,7 +26,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     private TextView tvDangNhap;
 
     FirebaseAuth mAuth;
-    private MessageObject messageObject = MessageObject.getInstance();
+    private AlertDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,22 +70,30 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             return;
         }
 
+        loadingDialog = UiFeedback.showLoading(this, R.string.feedback_loading);
         mAuth.sendPasswordResetEmail(email).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
+                UiFeedback.dismiss(loadingDialog);
                 if(task.isSuccessful()){
-                    Toast.makeText(ForgotPasswordActivity.this,"Hãy kiểm tra (Hộp thư đến) của bạn để tiến hành thiết lập lại mật khẩu!", Toast.LENGTH_LONG).show();
+                    UiFeedback.showTransient(ForgotPasswordActivity.this,
+                            getString(R.string.auth_reset_success), true);
                     Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
                     startActivity(intent);
+                    finish();
                 }
                 else {
-                    messageObject.ShowDialogMessage(Gravity.CENTER,
-                            ForgotPasswordActivity.this,
-                            "KHÔNG THÀNH CÔNG!Hãy kiểm tra lại Email của bạn và thử lại!",
-                            0);
+                    UiFeedback.showError(ForgotPasswordActivity.this,
+                            getString(R.string.auth_reset_failed));
                 }
 
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        UiFeedback.dismiss(loadingDialog);
     }
 }

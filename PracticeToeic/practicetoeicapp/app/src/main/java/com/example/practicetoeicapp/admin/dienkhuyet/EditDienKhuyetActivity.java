@@ -1,17 +1,16 @@
 package com.example.practicetoeicapp.admin.dienkhuyet;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.dienkhuyet.CauDienKhuyet;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.Arrays;
 
@@ -45,9 +44,7 @@ public class EditDienKhuyetActivity extends AppCompatActivity {
                 imgBack.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(EditDienKhuyetActivity.this, AdminDienKhuyetActivity.class);
-                        intent.putExtra("idBoDienKhuyet", dienKhuyet.getIdbo());
-                        startActivity(intent);
+                        finish();
                     }
                 });
                 imgEdit.setOnClickListener(new View.OnClickListener() {
@@ -57,32 +54,33 @@ public class EditDienKhuyetActivity extends AppCompatActivity {
                         String dapan = edtDapAn.getText().toString().trim();
                         String goiy = edtGoiY.getText().toString().trim();
                         if (noidung.isEmpty() || dapan.isEmpty() || goiy.isEmpty()) {
-                            Toast.makeText(EditDienKhuyetActivity.this,
-                                    "Chưa điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                            UiFeedback.showTransient(EditDienKhuyetActivity.this,
+                                    getString(R.string.feedback_required_fields), false);
                             return;
                         }
                         if (!checkDapAnInGoiY(dapan, goiy)) {
-                            Toast.makeText(EditDienKhuyetActivity.this,
-                                    "Vui lòng nhập đúng đáp án", Toast.LENGTH_SHORT).show();
+                            UiFeedback.showTransient(EditDienKhuyetActivity.this,
+                                    getString(R.string.feedback_invalid_answer), false);
                             return;
                         }
+                        final AlertDialog loading = UiFeedback.showLoading(EditDienKhuyetActivity.this,
+                                R.string.feedback_saving);
                         repository.updateDienKhuyet(dienKhuyet.getIdcau(), dienKhuyet.getIdbo(),
                                 noidung, dapan, goiy,
                                 new QuestionRepository.DataCallback<Void>() {
                                     @Override
                                     public void onSuccess(Void data) {
-                                        Toast.makeText(EditDienKhuyetActivity.this,
-                                                "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(EditDienKhuyetActivity.this,
-                                                AdminDienKhuyetActivity.class);
-                                        intent.putExtra("idBoDienKhuyet", dienKhuyet.getIdbo());
-                                        startActivity(intent);
+                                        UiFeedback.dismiss(loading);
+                                        UiFeedback.showTransient(EditDienKhuyetActivity.this,
+                                                getString(R.string.feedback_update_success), true);
+                                        finish();
                                     }
 
                                     @Override
                                     public void onError(Exception e) {
-                                        Toast.makeText(EditDienKhuyetActivity.this,
-                                                "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                                        UiFeedback.dismiss(loading);
+                                        UiFeedback.showTransient(EditDienKhuyetActivity.this,
+                                                getString(R.string.feedback_update_failed), false);
                                     }
                                 });
                     }
@@ -91,9 +89,9 @@ public class EditDienKhuyetActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(EditDienKhuyetActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
-                finish();
+                UiFeedback.showInfo(EditDienKhuyetActivity.this,
+                        getString(R.string.feedback_load_failed),
+                        EditDienKhuyetActivity.this::finish);
             }
         });
     }

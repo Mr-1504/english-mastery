@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -26,6 +25,7 @@ import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.taikhoan.User;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,9 +82,8 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
                 cauSapXeps.clear();
                 cauSapXeps.addAll(data);
                 if (cauSapXeps.isEmpty()) {
-                    Toast.makeText(ArrangeSentencesActivity.this,
-                            "Nội dung sẽ cập nhật cập nhật trong thời gian sớm nhất! Mong mọi người thông càm!!",
-                            Toast.LENGTH_LONG).show();
+                    UiFeedback.showTransient(ArrangeSentencesActivity.this,
+                            getString(R.string.question_set_empty), false);
                     finish();
                     startActivity(new Intent(ArrangeSentencesActivity.this, SapXepCauActivity.class));
                 } else {
@@ -94,8 +93,8 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(ArrangeSentencesActivity.this,
-                        "Không tải được dữ liệu", Toast.LENGTH_SHORT).show();
+                UiFeedback.showError(ArrangeSentencesActivity.this,
+                        getString(R.string.admin_list_error));
             }
         });
     }
@@ -249,7 +248,6 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
             if (cau == cauSapXeps.size()) {
                 score += 5;
                 DB.capnhatdiem(DB.iduser, user.getPoint(), score);
-                Toast.makeText(ArrangeSentencesActivity.this, "Hoàn Thành Xuất Sắc!!~(^.^)~", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ArrangeSentencesActivity.this, FinishSXCActivity.class);
                 intent.putExtra("score", score);
                 intent.putExtra("questiontrue", cau);
@@ -258,7 +256,7 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
                 finish();
                 return;
             } else {
-                Toast.makeText(ArrangeSentencesActivity.this, "Chính xác!!(^.^)", Toast.LENGTH_SHORT).show();
+                UiFeedback.showAnswer(ArrangeSentencesActivity.this, true);
                 textAnswer = cauSapXeps.get(cau).getDapan();
                 keys[0] = cauSapXeps.get(cau).getPart1();
                 keys[1] = cauSapXeps.get(cau).getPart2();
@@ -269,7 +267,7 @@ public class ArrangeSentencesActivity extends AppCompatActivity {
                 cau++;
             }
         } else {
-            Toast.makeText(ArrangeSentencesActivity.this, "Sai rồi!!(T.T)", Toast.LENGTH_SHORT).show();
+            UiFeedback.showAnswer(ArrangeSentencesActivity.this, false);
             editText.setText("");
         }
 

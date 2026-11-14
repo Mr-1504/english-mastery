@@ -34,7 +34,6 @@ public class AdminTracNghiemActivity extends AppCompatActivity {
         listTracNghiem = new ArrayList<>();
         adapter = new AdminTracNghiemAdapter(AdminTracNghiemActivity.this, listTracNghiem);
         listController.listView.setAdapter(adapter);
-        loadTracNghiem();
 
         listController.bindBack(v -> finish());
         listController.bindAdd(v -> {
@@ -44,7 +43,14 @@ public class AdminTracNghiemActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTracNghiem();
+    }
+
     private void loadTracNghiem() {
+        listController.showLoading();
         repository.loadTracNghiem(idbo, new QuestionRepository.DataCallback<List<CauTracNghiem>>() {
             @Override
             public void onSuccess(List<CauTracNghiem> data) {

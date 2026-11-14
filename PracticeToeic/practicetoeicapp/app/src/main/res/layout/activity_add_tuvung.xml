@@ -176,23 +176,37 @@
                 android:paddingEnd="16dp"
                 android:popupBackground="@color/app_surface_card" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.App.TextInput"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/section_gap"
-                android:hint="@string/form_audio">
+                android:background="@drawable/bg_input"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_target"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingEnd="16dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtAudioAddTV"
-                    android:layout_width="match_parent"
+                <ImageButton
+                    android:id="@+id/btnPlayAudioAddTV"
+                    android:layout_width="@dimen/touch_target"
+                    android:layout_height="@dimen/touch_target"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/form_play_audio"
+                    android:src="@drawable/ic_play_arrow"
+                    app:tint="@color/app_primary" />
+
+                <TextView
+                    android:id="@+id/tvAudioStatusAddTV"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    android:inputType="textUri"
-                    android:maxLines="1"
-                    android:textColor="@color/app_on_surface"
-                    android:textSize="15sp" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/form_audio_none"
+                    android:textColor="@color/app_on_surface_variant"
+                    android:textSize="14sp" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -36,7 +36,6 @@ public class AdminBoTracNghiemActivity extends AppCompatActivity {
         adapter = new BoHocTapAdapter(AdminBoTracNghiemActivity.this,
                 R.layout.row_botracnghiem, listBoTracNghiem);
         listController.listView.setAdapter(adapter);
-        loadBoTracNghiem();
 
         listController.bindBack(v -> finish());
         listController.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -49,7 +48,14 @@ public class AdminBoTracNghiemActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBoTracNghiem();
+    }
+
     private void loadBoTracNghiem() {
+        listController.showLoading();
         repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
             @Override
             public void onSuccess(List<BoHocTap> data) {

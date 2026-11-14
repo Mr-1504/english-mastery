@@ -34,7 +34,6 @@ public class AdminLuyenNgheActivity extends AppCompatActivity {
         listLuyenNghe = new ArrayList<>();
         adapter = new AdminLuyenNgheAdapter(AdminLuyenNgheActivity.this, listLuyenNghe);
         listController.listView.setAdapter(adapter);
-        loadLuyenNghe();
 
         listController.bindBack(v -> finish());
         listController.bindAdd(v -> {
@@ -44,7 +43,14 @@ public class AdminLuyenNgheActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadLuyenNghe();
+    }
+
     private void loadLuyenNghe() {
+        listController.showLoading();
         repository.loadLuyenNghe(idbo, new QuestionRepository.DataCallback<List<CauLuyenNghe>>() {
             @Override
             public void onSuccess(List<CauLuyenNghe> data) {

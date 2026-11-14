@@ -6,12 +6,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -19,19 +20,24 @@ import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.data.MediaTypeUtil;
 import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.data.SupabaseStorageRepository;
+import com.example.practicetoeicapp.ui.AudioPreviewPlayer;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 import java.util.ArrayList;
 
 public class AddLuyenNgheActivity extends AppCompatActivity {
     View imgBack, imgAdd;
     ImageView imgHinh;
+    ImageButton btnPlayAudio;
     Button btnChonHinh, btnChonAudio;
-    EditText edtAudio;
+    TextView tvAudioStatus;
     Spinner spnDapAnTrue;
     final int REQUEST_CHOOSE_PHOTO = 321;
     final int REQUEST_CHOOSE_AUDIO = 322;
     QuestionRepository repository;
     SupabaseStorageRepository storageRepository;
+    AudioPreviewPlayer audioPreviewPlayer;
+    AlertDialog loadingDialog;
     int idBLN = 0;
     Uri imageUri;
     Uri audioUri;
@@ -46,10 +52,29 @@ public class AddLuyenNgheActivity extends AppCompatActivity {
         imgAdd = findViewById(R.id.imgAddLN);
         btnChonHinh = findViewById(R.id.btnChonHinhAddLN);
         btnChonAudio = findViewById(R.id.btnChonAudioAddLN);
-        edtAudio = findViewById(R.id.edtAudioAddLN);
+        btnPlayAudio = findViewById(R.id.btnPlayAudioAddLN);
+        tvAudioStatus = findViewById(R.id.tvAudioStatusAddLN);
         spnDapAnTrue = findViewById(R.id.spnDapAnTrueAddLN);
         repository = QuestionRepository.getInstance();
         storageRepository = SupabaseStorageRepository.getInstance();
+        audioPreviewPlayer = new AudioPreviewPlayer(this);
+        audioPreviewPlayer.setOnStateListener(new AudioPreviewPlayer.OnStateListener() {
+            @Override
+            public void onStateChanged(boolean playing) {
+                btnPlayAudio.setImageResource(playing
+                        ? R.drawable.ic_stop
+                        : R.drawable.ic_play_arrow);
+                tvAudioStatus.setText(playing
+                        ? R.string.form_audio_playing
+                        : audioUri != null ? R.string.form_audio_selected : R.string.form_audio_none);
+            }
+
+            @Override
+            public void onError() {
+                UiFeedback.showTransient(AddLuyenNgheActivity.this,
+                        getString(R.string.form_audio_error), false);
+            }
+        });
         ArrayList<String> listDapAn = new ArrayList<>();
         listDapAn.add("A");
         listDapAn.add("B");
@@ -71,12 +96,16 @@ public class AddLuyenNgheActivity extends AppCompatActivity {
                 chooseAudio();
             }
         });
+        btnPlayAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioPreviewPlayer.toggle(audioUri);
+            }
+        });
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(AddLuyenNgheActivity.this, AdminLuyenNgheActivity.class);
-                intent.putExtra("idBoLuyenNghe", idBLN);
-                startActivity(intent);
+                finish();
             }
         });
         imgAdd.setOnClickListener(new View.OnClickListener() {
@@ -91,35 +120,34 @@ public class AddLuyenNgheActivity extends AppCompatActivity {
         if (saving) {
             return;
         }
-        String audio = edtAudio.getText().toString().trim();
         if (imageUri == null) {
-            Toast.makeText(AddLuyenNgheActivity.this,
-                    "Chưa chọn hình", Toast.LENGTH_SHORT).show();
+            UiFeedback.showTransient(AddLuyenNgheActivity.this,
+                    getString(R.string.form_image_required), false);
             return;
         }
-        if (audioUri == null && audio.isEmpty()) {
-            Toast.makeText(AddLuyenNgheActivity.this,
-                    "Chưa chọn audio", Toast.LENGTH_SHORT).show();
+        if (audioUri == null) {
+            UiFeedback.showTransient(AddLuyenNgheActivity.this,
+                    getString(R.string.form_audio_required), false);
             return;
         }
         String dapanTrue = String.valueOf(spnDapAnTrue.getSelectedItemPosition() + 1);
         saving = true;
+        loadingDialog = UiFeedback.showLoading(this, R.string.feedback_uploading_image);
         storageRepository.uploadImage(this, imageUri, MediaTypeUtil.PREFIX_LISTENING_IMAGES,
                 new SupabaseStorageRepository.UploadCallback() {
                     @Override
                     public void onSuccess(String imageUrl) {
-                        if (audioUri != null) {
-                            uploadAudio(imageUrl, dapanTrue);
-                        } else {
-                            createLuyenNghe(imageUrl, dapanTrue, audio);
-                        }
+                        UiFeedback.setLoadingMessage(loadingDialog,
+                                R.string.feedback_uploading_audio);
+                        uploadAudio(imageUrl, dapanTrue);
                     }
 
                     @Override
                     public void onError(Exception e) {
                         saving = false;
-                        Toast.makeText(AddLuyenNgheActivity.this,
-                                "Tải hình thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showError(AddLuyenNgheActivity.this,
+                                getString(R.string.feedback_upload_failed));
                     }
                 });
     }
@@ -129,14 +157,16 @@ public class AddLuyenNgheActivity extends AppCompatActivity {
                 new SupabaseStorageRepository.UploadCallback() {
                     @Override
                     public void onSuccess(String audioUrl) {
+                        UiFeedback.setLoadingMessage(loadingDialog, R.string.feedback_saving);
                         createLuyenNghe(imageUrl, dapanTrue, audioUrl);
                     }
 
                     @Override
                     public void onError(Exception e) {
                         saving = false;
-                        Toast.makeText(AddLuyenNgheActivity.this,
-                                "Tải audio thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showError(AddLuyenNgheActivity.this,
+                                getString(R.string.feedback_upload_failed));
                     }
                 });
     }
@@ -147,19 +177,18 @@ public class AddLuyenNgheActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Integer data) {
                         saving = false;
-                        Toast.makeText(AddLuyenNgheActivity.this,
-                                "Thêm thành công", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(AddLuyenNgheActivity.this,
-                                AdminLuyenNgheActivity.class);
-                        intent.putExtra("idBoLuyenNghe", idBLN);
-                        startActivity(intent);
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showTransient(AddLuyenNgheActivity.this,
+                                getString(R.string.feedback_add_success), true);
+                        finish();
                     }
 
                     @Override
                     public void onError(Exception e) {
                         saving = false;
-                        Toast.makeText(AddLuyenNgheActivity.this,
-                                "Thêm thất bại", Toast.LENGTH_SHORT).show();
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showTransient(AddLuyenNgheActivity.this,
+                                getString(R.string.feedback_add_failed), false);
                     }
                 });
     }
@@ -187,9 +216,19 @@ public class AddLuyenNgheActivity extends AppCompatActivity {
             imageUri = data.getData();
             Glide.with(this).load(imageUri).into(imgHinh);
         } else if (requestCode == REQUEST_CHOOSE_AUDIO) {
+            audioPreviewPlayer.stop();
             audioUri = data.getData();
-            edtAudio.setText("");
-            edtAudio.setHint("Đã chọn file audio");
+            btnPlayAudio.setImageResource(R.drawable.ic_play_arrow);
+            tvAudioStatus.setText(R.string.form_audio_selected);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (audioPreviewPlayer != null) {
+            audioPreviewPlayer.release();
+        }
+        UiFeedback.dismiss(loadingDialog);
     }
 }

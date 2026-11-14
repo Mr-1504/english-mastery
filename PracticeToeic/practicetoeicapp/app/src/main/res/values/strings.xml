@@ -169,6 +169,13 @@
     <string name="form_choose_image">Chọn hình</string>
     <string name="form_choose_audio">Chọn audio</string>
     <string name="form_audio_selected">Đã chọn file audio</string>
+    <string name="form_audio_none">Chưa chọn audio</string>
+    <string name="form_audio_current">Audio hiện tại</string>
+    <string name="form_audio_playing">Đang phát…</string>
+    <string name="form_audio_error">Không phát được audio</string>
+    <string name="form_play_audio">Nghe thử audio</string>
+    <string name="form_image_required">Chưa chọn hình</string>
+    <string name="form_audio_required">Chưa chọn audio</string>
     <string name="form_complete_sentence">Câu hoàn chỉnh</string>
     <string name="form_part_1">Phần 1</string>
     <string name="form_part_2">Phần 2</string>
@@ -189,6 +196,17 @@
     <string name="forgot_title">Thiết lập lại mật khẩu</string>
     <string name="forgot_subtitle">Nhập email để nhận liên kết đặt lại mật khẩu</string>
     <string name="forgot_action">Gửi liên kết</string>
+    <string name="auth_email_required">Hãy nhập email của bạn</string>
+    <string name="auth_password_required">Hãy nhập mật khẩu của bạn</string>
+    <string name="auth_login_success">Đăng nhập thành công</string>
+    <string name="auth_login_failed">Sai email hoặc mật khẩu</string>
+    <string name="auth_signup_required">Vui lòng điền đầy đủ thông tin</string>
+    <string name="auth_signup_success">Đăng ký thành công</string>
+    <string name="auth_signup_failed">Đăng ký thất bại</string>
+    <string name="auth_email_exists">Email đã được đăng ký</string>
+    <string name="auth_password_mismatch">Mật khẩu xác nhận không trùng khớp</string>
+    <string name="auth_reset_success">Kiểm tra hộp thư đến để đặt lại mật khẩu</string>
+    <string name="auth_reset_failed">Không thể gửi email đặt lại mật khẩu</string>
     <string name="ranking_title">Bảng xếp hạng</string>
     <string name="ranking_subtitle">Top học viên có điểm tích lũy cao nhất</string>
     <string name="ranking_me">Hạng của bạn</string>
@@ -208,4 +226,22 @@
     <string name="finish_almost">Suýt soát rồi, cố lên!</string>
     <string name="finish_good_luck">Chúc bạn may mắn lần sau!</string>
     <string name="finish_score_format">%1$d / %2$d</string>
+
+    <string name="feedback_error_title">Có lỗi xảy ra</string>
+    <string name="feedback_ok">Đóng</string>
+    <string name="feedback_loading">Đang xử lý…</string>
+    <string name="feedback_saving">Đang lưu…</string>
+    <string name="feedback_uploading_image">Đang tải hình…</string>
+    <string name="feedback_uploading_audio">Đang tải audio…</string>
+    <string name="feedback_correct">Chính xác!</string>
+    <string name="feedback_incorrect">Chưa đúng</string>
+    <string name="feedback_required_fields">Vui lòng điền đầy đủ thông tin</string>
+    <string name="feedback_add_success">Thêm thành công</string>
+    <string name="feedback_add_failed">Thêm thất bại</string>
+    <string name="feedback_update_success">Cập nhật thành công</string>
+    <string name="feedback_update_failed">Cập nhật thất bại</string>
+    <string name="feedback_load_failed">Không tải được dữ liệu</string>
+    <string name="feedback_invalid_answer">Vui lòng nhập đúng đáp án</string>
+    <string name="feedback_invalid_parts">Vui lòng nhập đúng nội dung tách của câu</string>
+    <string name="feedback_upload_failed">Tải file thất bại. Vui lòng thử lại.</string>
 </resources>

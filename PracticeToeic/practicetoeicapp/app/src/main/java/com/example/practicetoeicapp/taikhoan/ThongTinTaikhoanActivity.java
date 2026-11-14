@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,6 +17,7 @@ import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 
 public class ThongTinTaikhoanActivity extends AppCompatActivity {
@@ -26,7 +26,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     DatabaseAccess DB;
     SQLiteDatabase database;
     ImageView imghome;
-    EditText tvHoten,tvEmail,tvSdt,tvUID;
+    EditText tvHoten,tvEmail,tvSdt;
     TextView tvtaikhoan, tvTen,tvPoint;
     Button btnCapNhat;
     String iduser;
@@ -51,7 +51,8 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (user == null) {
-                    Toast.makeText(ThongTinTaikhoanActivity.this, R.string.account_update_error, Toast.LENGTH_SHORT).show();
+                    UiFeedback.showError(ThongTinTaikhoanActivity.this,
+                            getString(R.string.account_update_error));
                     finish();
                     return;
                 }
@@ -77,14 +78,12 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         tvHoten = findViewById(R.id.textIntEdtHoten);
         tvEmail = findViewById(R.id.textIntEdtEmail);
         tvSdt = findViewById(R.id.textIntEdtSdt);
-        tvUID = findViewById(R.id.textIntEdtUID);
         tvtaikhoan = findViewById(R.id.tVusername);
         tvTen = findViewById(R.id.textViewTen);
         tvPoint = findViewById(R.id.textviewPoint);
         btnCapNhat = findViewById(R.id.buttonCapNhat);
         imghome = findViewById(R.id.imgHOME);
 
-        tvUID.setEnabled(false);
         tvEmail.setEnabled(false);
 
     }
@@ -94,16 +93,16 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         String sdt = tvSdt.getText().toString().trim();
         if(hoten.isEmpty() || sdt.isEmpty())
         {
-            Toast.makeText(this, R.string.account_update_error, Toast.LENGTH_SHORT).show();
+            UiFeedback.showTransient(this, getString(R.string.account_update_error), false);
         }
         else{
             Boolean checkupdate = DB.capnhatthongtin(DB.iduser,hoten,sdt);
             if(checkupdate == true)
             {
-                Toast.makeText(this, R.string.account_update_success, Toast.LENGTH_SHORT).show();
+                UiFeedback.showTransient(this, getString(R.string.account_update_success), true);
             }
             else{
-                Toast.makeText(this, "Thất bại", Toast.LENGTH_SHORT).show();
+                UiFeedback.showTransient(this, getString(R.string.account_update_error), false);
             }
         }
 
@@ -116,7 +115,6 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         tvPoint.setText(String.valueOf(user.getPoint()));
         tvEmail.setText(user.getEmail());
         tvSdt.setText(user.getSDT());
-        tvUID.setText(user.getIduser());
 
     }
 
