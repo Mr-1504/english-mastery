@@ -1,0 +1,61 @@
+# Local secrets / environment
+.env
+.env.*
+!.env.example
+!tools/migrate/.env.example
+deploy.env
+deploy.env.*
+!deploy.env.example
+tools/migrate/.env
+tools/migrate/.env.*
+!tools/migrate/.env.example
+*.jks
+*.keystore
+keystore.properties
+*service-account*.json
+*firebase-adminsdk*.json
+*.pem
+*.key
+
+# Firebase / Supabase CLI
+google-services.json
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/functions/**/.env
+
+# Android / Gradle
+.gradle/
+build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+*.apk
+*.aab
+
+# IDE / OS
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# SQLite runtime files
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite-journal
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Backups
+*.bak
+*.bk
