@@ -1,68 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.App.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardElevation="8dp"
-    app:cardCornerRadius="8dp"
-    android:layout_margin="15dp"
-    >
+    android:layout_marginBottom="10dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp">
 
-        <TextView
-            android:id="@+id/tvhotenrank"
-            android:layout_width="240dp"
-            android:layout_height="40dp"
-            android:layout_marginLeft="10dp"
-            android:fontFamily="@font/bungee"
-            android:text="Name"
-            android:textSize="20sp"
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_avatar">
 
-            />
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_profile"
+                app:tint="@color/app_primary" />
+        </FrameLayout>
 
-        <TextView
-            android:id="@+id/tvemailrank"
-            android:layout_width="220dp"
-            android:layout_height="42dp"
-            android:layout_below="@+id/tvhotenrank"
-            android:layout_alignParentBottom="true"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="13dp"
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            android:layout_marginBottom="5dp"
-            android:fontFamily="@font/bungee"
-            android:text="gmail"
-            android:textSize="10sp" />
+            <TextView
+                android:id="@+id/tvhotenrank"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:textColor="@color/app_on_surface"
+                android:textSize="15sp"
+                tools:text="Nguyễn Văn A" />
+
+            <TextView
+                android:id="@+id/tvemailrank"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:maxLines="1"
+                android:textColor="@color/app_on_surface_variant"
+                android:textSize="12sp"
+                tools:text="email@example.com" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvpointrank"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_points_pill"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginTop="27dp"
-
-            android:layout_marginEnd="25dp"
-            android:layout_marginRight="25dp"
-            android:layout_marginBottom="31dp"
-            android:layout_toStartOf="@+id/imagerank"
-            android:layout_toLeftOf="@+id/imagerank"
-            android:fontFamily="@font/bungee"
-            android:text="10"
-            android:textSize="15sp" />
-
-        <ImageView
-            android:id="@+id/imagerank"
-            android:layout_width="60dp"
-            android:layout_height="100dp"
-            android:layout_alignParentRight="true"
-            android:src="@drawable/rank"
-
-            />
-    </RelativeLayout>
-
-</androidx.cardview.widget.CardView>
+            android:minWidth="44dp"
+            android:textColor="@color/app_on_primary_container"
+            android:textSize="14sp"
+            tools:text="120" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

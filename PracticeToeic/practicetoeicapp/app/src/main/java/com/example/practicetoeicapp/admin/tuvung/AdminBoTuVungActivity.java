@@ -1,75 +1,74 @@
 package com.example.practicetoeicapp.admin.tuvung;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.admin.AdminActivity;
+import com.example.practicetoeicapp.admin.AdminListController;
 import com.example.practicetoeicapp.bohoctap.BoHocTap;
 import com.example.practicetoeicapp.bohoctap.BoHocTapAdapter;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.QuestionRepository;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class AdminBoTuVungActivity extends AppCompatActivity {
-    final  String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
-    ImageView imgBack;
     ArrayList<BoHocTap> listBoTuVung;
     BoHocTapAdapter adapter;
-    ListView lvBoTuVung;
-    int idbo;
+    AdminListController listController;
+    QuestionRepository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_botuvung);
-        lvBoTuVung = (ListView) findViewById(R.id.listviewAdminBTV);
-        imgBack = (ImageView) findViewById(R.id.imgBackAdminBTV);
+        listController = new AdminListController(this,
+                R.string.admin_botuvung_title,
+                R.string.admin_select_subtitle,
+                false,
+                R.string.admin_list_empty);
+        repository = QuestionRepository.getInstance();
         listBoTuVung = new ArrayList<>();
-        getBoTuVung();
-        adapter = new BoHocTapAdapter(AdminBoTuVungActivity.this, R.layout.row_botuvung, listBoTuVung);
-        lvBoTuVung.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finishAffinity();
-                startActivity(new Intent(AdminBoTuVungActivity.this, AdminActivity.class));
-            }
-        });
+        adapter = new BoHocTapAdapter(AdminBoTuVungActivity.this,
+                R.layout.row_botuvung, listBoTuVung);
+        listController.listView.setAdapter(adapter);
 
-        lvBoTuVung.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listController.bindBack(v -> finish());
+        listController.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                idbo = listBoTuVung.get(position).getIdBo();
                 Intent intent = new Intent(AdminBoTuVungActivity.this, AdminTuVungActivity.class);
-                intent.putExtra("idBoTuVung", idbo);
-                finishAffinity();
+                intent.putExtra("idBoTuVung", listBoTuVung.get(position).getIdBo());
                 startActivity(intent);
             }
         });
     }
 
-    private void getBoTuVung() {
-        database = Database.initDatabase(AdminBoTuVungActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM BoCauHoi", null);
-        listBoTuVung.clear();
-        for (int i = 0; i < cursor.getCount(); i++) {
-            cursor.moveToPosition(i);
-            int id = cursor.getInt(0);
-            int stt = cursor.getInt(1);
-            String ten = cursor.getString(2);
-            listBoTuVung.add(new BoHocTap(id, stt, ten));
-        }
-        cursor.close();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBoTuVung();
+    }
+
+    private void loadBoTuVung() {
+        listController.showLoading();
+        repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
+            @Override
+            public void onSuccess(List<BoHocTap> data) {
+                listBoTuVung.clear();
+                listBoTuVung.addAll(data);
+                adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
+            }
+
+            @Override
+            public void onError(Exception e) {
+                listController.showError();
+            }
+        });
     }
 }

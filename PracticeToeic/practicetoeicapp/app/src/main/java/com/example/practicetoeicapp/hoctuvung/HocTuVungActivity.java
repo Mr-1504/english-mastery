@@ -1,13 +1,13 @@
 package com.example.practicetoeicapp.hoctuvung;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,22 +15,20 @@ import com.example.practicetoeicapp.MainActivity;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.bohoctap.BoHocTap;
 import com.example.practicetoeicapp.bohoctap.BoHocTapAdapter;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.QuestionRepository;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class HocTuVungActivity extends AppCompatActivity {
 
-    final  String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
     ImageView imgback;
-
+    ProgressBar progressBar;
+    TextView emptyState;
     ArrayList<BoHocTap> boTuVungs;
     BoHocTapAdapter adapter;
     ListView botuvungs;
-
-    int idbo;
-
+    QuestionRepository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,18 +36,20 @@ public class HocTuVungActivity extends AppCompatActivity {
         setContentView(R.layout.activity_hoctuvung);
         botuvungs = findViewById(R.id.listviewHTV);
         imgback = findViewById(R.id.imgVBackHTV);
+        progressBar = findViewById(R.id.progressBar);
+        emptyState = findViewById(R.id.emptyState);
         boTuVungs = new ArrayList<>();
-        AddArrayBTV();
-        adapter = new BoHocTapAdapter(HocTuVungActivity.this,R.layout.row_botuvung,boTuVungs);
+        adapter = new BoHocTapAdapter(HocTuVungActivity.this,
+                R.layout.row_botuvung, boTuVungs);
         botuvungs.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
+        repository = QuestionRepository.getInstance();
+        loadBoHocTap();
 
         botuvungs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                idbo = boTuVungs.get(position).getIdBo();
                 Intent dstv = new Intent(HocTuVungActivity.this, DSTuVungActivity.class);
-                dstv.putExtra("idbo", idbo);
+                dstv.putExtra("idbo", boTuVungs.get(position).getIdBo());
                 startActivity(dstv);
             }
         });
@@ -57,26 +57,29 @@ public class HocTuVungActivity extends AppCompatActivity {
         imgback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent
-                        = new Intent(HocTuVungActivity.this,
-                        MainActivity.class);
+                Intent intent = new Intent(HocTuVungActivity.this, MainActivity.class);
                 startActivity(intent);
             }
         });
     }
 
-    private void AddArrayBTV(){
-        database = Database.initDatabase(HocTuVungActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM BoCauHoi",null);
-        boTuVungs.clear();
+    private void loadBoHocTap() {
+        repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
+            @Override
+            public void onSuccess(List<BoHocTap> data) {
+                boTuVungs.clear();
+                boTuVungs.addAll(data);
+                adapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                emptyState.setVisibility(data.isEmpty() ? View.VISIBLE : View.GONE);
+            }
 
-        for (int i = 0; i < cursor.getCount(); i++){
-            cursor.moveToPosition(i);
-            int idbo = cursor.getInt(0);
-            int  stt = cursor.getInt(1);
-            String tenbo = cursor.getString(2);
-            boTuVungs.add(new BoHocTap(idbo,stt,tenbo));
-        }
-
+            @Override
+            public void onError(Exception e) {
+                progressBar.setVisibility(View.GONE);
+                emptyState.setText(R.string.question_set_error);
+                emptyState.setVisibility(View.VISIBLE);
+            }
+        });
     }
 }

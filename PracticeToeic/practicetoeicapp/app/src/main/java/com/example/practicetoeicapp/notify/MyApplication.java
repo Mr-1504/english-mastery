@@ -5,11 +5,20 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 
+import com.example.practicetoeicapp.theme.ThemePrefs;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 public class MyApplication extends Application {
     public static final String CHANNEL_ID="channel_service_example";
     @Override
     public void onCreate(){
         super.onCreate();
+        ThemePrefs.applySavedTheme(this);
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(false)
+                .build();
+        FirebaseFirestore.getInstance().setFirestoreSettings(settings);
         createChannelNotification();
     }
     private void createChannelNotification() {

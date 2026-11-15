@@ -1,104 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/yellowbackground">
+    android:background="@color/app_surface"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    tools:context=".tracnghiem.FinishQuizActivity">
 
-    <ImageView
-        android:id="@+id/imgtrophy"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_marginTop="18dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_trophy"
-        android:layout_centerHorizontal="true"
-        tools:ignore="VectorDrawableCompat" />
-
-    <TextView
-        android:id="@+id/txtcongrats"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Congratulaton!"
-        android:fontFamily="@font/fredokaoneregular"
-        android:textSize="45sp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/imgtrophy"
-        android:textColor="@color/black"></TextView>
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingTop="@dimen/section_gap"
+        android:paddingEnd="@dimen/screen_margin"
+        android:paddingBottom="@dimen/section_gap">
 
-    <TextView
-        android:id="@+id/textquestioncount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
-        android:fontFamily="@font/fredokaoneregular"
-        android:text="CORRECT ANSWERS"
-        android:textColor="@android:color/black"
-        android:layout_centerHorizontal="true"
-        android:textSize="30sp"
-        android:layout_below="@id/txtcongrats" />
+        <ImageView
+            android:id="@+id/imgtrophy"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:contentDescription="@null"
+            android:padding="16dp"
+            android:src="@drawable/ic_trophy"
+            app:tint="@color/app_primary" />
 
-    <TextView
-        android:id="@+id/txtquestiontrue"
-        android:textColor="@color/black"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/fredokaoneregular"
-        android:text="6/6"
-        android:textSize="30sp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/textquestioncount"></TextView>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/card_gap"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="@string/finish_title"
+            android:textColor="@color/app_on_surface"
+            android:textSize="26sp" />
 
+        <TextView
+            android:id="@+id/txtcongrats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:text="@string/finish_result_label"
+            android:textColor="@color/app_on_surface_variant"
+            android:textSize="13sp" />
 
-    <TextView
-        android:id="@+id/tvRP"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
-        android:fontFamily="@font/fredokaoneregular"
-        android:text="Reward Points"
-        android:textColor="@android:color/black"
-        android:textSize="30sp"
-        android:layout_below="@id/txtquestiontrue"
-        android:layout_centerHorizontal="true"/>
+        <TextView
+            android:id="@+id/txtfinaltext"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:textColor="@color/app_on_surface_variant"
+            android:textSize="15sp"
+            tools:text="Almost there!!" />
 
-    <TextView
-        android:id="@+id/tvPoints"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_dollar"
-        android:drawablePadding="10dp"
-        android:fontFamily="@font/fredokaoneregular"
-        android:text="500"
-        android:textColor="@android:color/black"
-        android:textSize="30sp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/tvRP" />
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.App.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_gap">
 
-    <TextView
-        android:id="@+id/txtfinaltext"
-        android:layout_marginTop="30sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Perfect Attemp!!"
-        android:textSize="30sp"
-        android:layout_centerHorizontal="true"
-        android:gravity="center"
-        android:layout_below="@id/tvPoints"
-        android:fontFamily="@font/fredokaoneregular"
-        android:textColor="@color/black"
-        ></TextView>
-    <Button
-        android:id="@+id/btnReturn"
-        android:layout_marginTop="30dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Return"
-        android:textSize="30sp"
-        android:fontFamily="@font/fredokaoneregular"
-        android:layout_below="@id/txtfinaltext"
-        android:layout_centerHorizontal="true"></Button>
-</RelativeLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textquestioncount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/finish_correct"
+                        android:textColor="@color/app_on_surface_variant"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/txtquestiontrue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:textColor="@color/app_on_surface"
+                        android:textSize="28sp"
+                        tools:text="4 / 5" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/app_outline_variant" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvRP"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif"
+                        android:gravity="center"
+                        android:text="@string/finish_reward"
+                        android:textColor="@color/app_on_surface_variant"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/points_label"
+                        android:textColor="@color/app_on_surface_variant"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tvPoints"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:textColor="@color/app_primary"
+                        android:textSize="28sp"
+                        tools:text="80" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReturn"
+            style="@style/Widget.App.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/touch_target"
+            android:layout_marginTop="@dimen/section_gap"
+            android:text="@string/finish_return" />
+    </LinearLayout>
+</ScrollView>

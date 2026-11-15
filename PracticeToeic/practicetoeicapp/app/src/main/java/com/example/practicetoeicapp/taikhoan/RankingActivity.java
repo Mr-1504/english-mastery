@@ -51,12 +51,14 @@ public class RankingActivity extends AppCompatActivity {
         database.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                list.clear();
                 for(DataSnapshot dataSnapshot:snapshot.getChildren())
                 {
                     UserRanking userRanking = dataSnapshot.getValue(UserRanking.class);
-                    list.add(userRanking);
+                    if (userRanking != null) {
+                        list.add(userRanking);
+                    }
                 }
-                //dao nguoc list
                 Collections.reverse(list);
                 Top3point();
                 adapterRank.notifyDataSetChanged();
@@ -96,9 +98,9 @@ public class RankingActivity extends AppCompatActivity {
     }
     private void Top3point()
     {
-        tvPointrank1.setText(String.valueOf(list.get(0).getPoint()));
-        tvPointrank2.setText(String.valueOf(list.get(1).getPoint()));
-        tvPointrank3.setText(String.valueOf(list.get(2).getPoint()));
+        tvPointrank1.setText(list.size() > 0 ? String.valueOf(list.get(0).getPoint()) : "--");
+        tvPointrank2.setText(list.size() > 1 ? String.valueOf(list.get(1).getPoint()) : "--");
+        tvPointrank3.setText(list.size() > 2 ? String.valueOf(list.get(2).getPoint()) : "--");
     }
 
 }

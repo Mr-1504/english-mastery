@@ -1,68 +1,64 @@
 package com.example.practicetoeicapp.admin.bohoctap;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.admin.AdminActivity;
+import com.example.practicetoeicapp.admin.AdminListController;
 import com.example.practicetoeicapp.bohoctap.BoHocTap;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.QuestionRepository;
 
 import java.util.ArrayList;
-
-
+import java.util.List;
 
 public class AdminBoHocTapActivity extends AppCompatActivity {
     ArrayList<BoHocTap> listBHT;
     AdminBoHocTapAdapter adapter;
-    ImageView imgBack, imgAdd;
-    final  String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
-    ListView listViewBHT;
+    AdminListController listController;
+    QuestionRepository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_bohoctap);
-        listViewBHT = (ListView) findViewById(R.id.listviewAdminBHT);
-        imgBack = (ImageView) findViewById(R.id.imgBackAdminBHT);
-        imgAdd = (ImageView) findViewById(R.id.imgAddBHT);
-        getBoHocTap();
+        listController = new AdminListController(this,
+                R.string.admin_bohoctap_title,
+                R.string.admin_list_subtitle,
+                true,
+                R.string.admin_list_empty_add);
+        repository = QuestionRepository.getInstance();
+        listBHT = new ArrayList<>();
         adapter = new AdminBoHocTapAdapter(AdminBoHocTapActivity.this, listBHT);
-        listViewBHT.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminBoHocTapActivity.this, AdminActivity.class));
-            }
-        });
-        imgAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminBoHocTapActivity.this, AddBoHocTapActivity.class));
-            }
-        });
+        listController.listView.setAdapter(adapter);
+
+        listController.bindBack(v -> finish());
+        listController.bindAdd(v ->
+                startActivity(new Intent(AdminBoHocTapActivity.this, AddBoHocTapActivity.class)));
     }
 
-    private void getBoHocTap() {
-        database = Database.initDatabase(AdminBoHocTapActivity.this, DATABASE_NAME);
-        listBHT = new ArrayList<>();
-        listBHT.clear();
-        Cursor cursor = database.rawQuery("SELECT * FROM BoCauHoi", null);
-        for (int i = 0; i < cursor.getCount(); i++) {
-            cursor.moveToPosition(i);
-            int idbo = cursor.getInt(0);
-            int  stt = cursor.getInt(1);
-            String tenbo = cursor.getString(2);
-            listBHT.add(new BoHocTap(idbo, stt, tenbo));
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadBoHocTap();
+    }
+
+    private void loadBoHocTap() {
+        listController.showLoading();
+        repository.loadBoHocTap(new QuestionRepository.DataCallback<List<BoHocTap>>() {
+            @Override
+            public void onSuccess(List<BoHocTap> data) {
+                listBHT.clear();
+                listBHT.addAll(data);
+                adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
+            }
+
+            @Override
+            public void onError(Exception e) {
+                listController.showError();
+            }
+        });
     }
 }

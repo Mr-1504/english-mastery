@@ -1,71 +1,69 @@
 package com.example.practicetoeicapp.admin.dienkhuyet;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.admin.AdminListController;
+import com.example.practicetoeicapp.data.QuestionRepository;
 import com.example.practicetoeicapp.dienkhuyet.CauDienKhuyet;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class AdminDienKhuyetActivity extends AppCompatActivity {
-    final String DATABASE_NAME = "HocNgonNgu.db";
-    SQLiteDatabase database;
-    ImageView imgBack, imgAdd;
     ArrayList<CauDienKhuyet> listDienKhuyet;
     AdminDienKhuyetAdapter adapter;
-    ListView lvDienKhuyet;
+    AdminListController listController;
+    QuestionRepository repository;
     int idbo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_dienkhuyet);
-        Intent idIntent = getIntent();
-        idbo = idIntent.getIntExtra("idBoDienKhuyet", 0);
-        lvDienKhuyet = (ListView) findViewById(R.id.listviewAdminDK);
-        imgBack = (ImageView) findViewById(R.id.imgBackAdminDK);
-        imgAdd = (ImageView) findViewById(R.id.imgAddAdminDK);
+        idbo = getIntent().getIntExtra("idBoDienKhuyet", 0);
+        listController = new AdminListController(this,
+                R.string.admin_dienkhuyet_content,
+                R.string.admin_list_subtitle,
+                true,
+                R.string.admin_list_empty_add);
+        repository = QuestionRepository.getInstance();
         listDienKhuyet = new ArrayList<>();
-        getDienKhuyet();
         adapter = new AdminDienKhuyetAdapter(AdminDienKhuyetActivity.this, listDienKhuyet);
-        lvDienKhuyet.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-        imgBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(AdminDienKhuyetActivity.this, AdminBoDienKhuyetActivity.class));
-            }
-        });
-        imgAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AdminDienKhuyetActivity.this, AddDienKhuyetActivity.class);
-                intent.putExtra("idBoDienKhuyet", idbo);
-                startActivity(intent);
-            }
+        listController.listView.setAdapter(adapter);
+
+        listController.bindBack(v -> finish());
+        listController.bindAdd(v -> {
+            Intent intent = new Intent(AdminDienKhuyetActivity.this, AddDienKhuyetActivity.class);
+            intent.putExtra("idBoDienKhuyet", idbo);
+            startActivity(intent);
         });
     }
 
-    private void getDienKhuyet() {
-        database = Database.initDatabase(AdminDienKhuyetActivity.this, DATABASE_NAME);
-        Cursor cursor = database.rawQuery("SELECT * FROM DienKhuyet WHERE ID_Bo = ?", new String[]{String.valueOf(idbo)});
-        listDienKhuyet.clear();
-        for (int i = 0; i < cursor.getCount(); i++){
-            cursor.moveToPosition(i);
-            int idcau = cursor.getInt(0);
-            int idbo = cursor.getInt(1);
-            String noidung = cursor.getString(2);
-            String dapan = cursor.getString(3);
-            String goiy = cursor.getString(4);
-            listDienKhuyet.add(new CauDienKhuyet(idcau, idbo, noidung, dapan, goiy));
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadDienKhuyet();
+    }
+
+    private void loadDienKhuyet() {
+        listController.showLoading();
+        repository.loadDienKhuyet(idbo, new QuestionRepository.DataCallback<List<CauDienKhuyet>>() {
+            @Override
+            public void onSuccess(List<CauDienKhuyet> data) {
+                listDienKhuyet.clear();
+                listDienKhuyet.addAll(data);
+                adapter.notifyDataSetChanged();
+                listController.showContent(data.isEmpty());
+            }
+
+            @Override
+            public void onError(Exception e) {
+                listController.showError();
+            }
+        });
     }
 }

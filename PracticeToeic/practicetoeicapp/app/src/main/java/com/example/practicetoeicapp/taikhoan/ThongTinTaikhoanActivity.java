@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,6 +17,7 @@ import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
 
 public class ThongTinTaikhoanActivity extends AppCompatActivity {
@@ -26,7 +26,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     DatabaseAccess DB;
     SQLiteDatabase database;
     ImageView imghome;
-    EditText tvHoten,tvEmail,tvSdt,tvUID;
+    EditText tvHoten,tvEmail,tvSdt;
     TextView tvtaikhoan, tvTen,tvPoint;
     Button btnCapNhat;
     String iduser;
@@ -50,6 +50,12 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         imghome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (user == null) {
+                    UiFeedback.showError(ThongTinTaikhoanActivity.this,
+                            getString(R.string.account_update_error));
+                    finish();
+                    return;
+                }
                 if(user.getRole() == 0) {
                     Intent intent = new Intent(ThongTinTaikhoanActivity.this, AdminActivity.class);
                     startActivity(intent);
@@ -72,33 +78,31 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         tvHoten = findViewById(R.id.textIntEdtHoten);
         tvEmail = findViewById(R.id.textIntEdtEmail);
         tvSdt = findViewById(R.id.textIntEdtSdt);
-        tvUID = findViewById(R.id.textIntEdtUID);
         tvtaikhoan = findViewById(R.id.tVusername);
         tvTen = findViewById(R.id.textViewTen);
         tvPoint = findViewById(R.id.textviewPoint);
         btnCapNhat = findViewById(R.id.buttonCapNhat);
         imghome = findViewById(R.id.imgHOME);
 
-        tvUID.setEnabled(false);
         tvEmail.setEnabled(false);
 
     }
     private void CapNhatThongTin()
     {
-        String hoten = tvHoten.getText().toString();
-        String sdt = tvSdt.getText().toString();
-        if(hoten =="" || sdt=="")
+        String hoten = tvHoten.getText().toString().trim();
+        String sdt = tvSdt.getText().toString().trim();
+        if(hoten.isEmpty() || sdt.isEmpty())
         {
-            Toast.makeText(this, "Không hợp lệ", Toast.LENGTH_SHORT).show();
+            UiFeedback.showTransient(this, getString(R.string.account_update_error), false);
         }
         else{
             Boolean checkupdate = DB.capnhatthongtin(DB.iduser,hoten,sdt);
             if(checkupdate == true)
             {
-                Toast.makeText(this, "Câp nhật thành công", Toast.LENGTH_SHORT).show();
+                UiFeedback.showTransient(this, getString(R.string.account_update_success), true);
             }
             else{
-                Toast.makeText(this, "Thất bại", Toast.LENGTH_SHORT).show();
+                UiFeedback.showTransient(this, getString(R.string.account_update_error), false);
             }
         }
 
@@ -111,7 +115,6 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         tvPoint.setText(String.valueOf(user.getPoint()));
         tvEmail.setText(user.getEmail());
         tvSdt.setText(user.getSDT());
-        tvUID.setText(user.getIduser());
 
     }
 
@@ -119,16 +122,21 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     {
         database = Database.initDatabase(ThongTinTaikhoanActivity.this, DATABASE_NAME);
         Cursor cursor = database.rawQuery("SELECT * FROM User WHERE ID_User = ?",new String[]{String.valueOf(DB.iduser)});
-        cursor.moveToNext();
-        String Iduser = cursor.getString(0);
-        String HoTen = cursor.getString(1);
-        int Point = cursor.getInt(2);
-        String Email = cursor.getString(3);
-        String SDT = cursor.getString(4);
-        int Role = cursor.getInt(5);
-        user = new User(Iduser,HoTen,Point,Email,SDT,Role);
+        try {
+            if (cursor.moveToNext()) {
+                String Iduser = cursor.getString(0);
+                String HoTen = cursor.getString(1);
+                int Point = cursor.getInt(2);
+                String Email = cursor.getString(3);
+                String SDT = cursor.getString(4);
+                int Role = cursor.getInt(5);
+                user = new User(Iduser, HoTen, Point, Email, SDT, Role);
 
-        TruyenThongTin();
+                TruyenThongTin();
+            }
+        } finally {
+            cursor.close();
+        }
 
     }
 

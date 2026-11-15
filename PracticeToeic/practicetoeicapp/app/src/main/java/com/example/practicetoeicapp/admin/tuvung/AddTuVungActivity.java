@@ -1,64 +1,91 @@
 package com.example.practicetoeicapp.admin.tuvung;
 
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.R;
-import com.example.practicetoeicapp.database.Database;
+import com.example.practicetoeicapp.data.MediaTypeUtil;
+import com.example.practicetoeicapp.data.QuestionRepository;
+import com.example.practicetoeicapp.data.SupabaseStorageRepository;
+import com.example.practicetoeicapp.ui.AudioPreviewPlayer;
+import com.example.practicetoeicapp.ui.UiFeedback;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 
 public class AddTuVungActivity extends AppCompatActivity {
-
-    ImageView imgBack, imgHinh, imgAdd;
-    Button btnChonHinh;
-    EditText edtTuVung, edtNghia, edtAudio;
+    View imgBack, imgAdd;
+    ImageView imgHinh;
+    ImageButton btnPlayAudio;
+    Button btnChonHinh, btnChonAudio;
+    EditText edtTuVung, edtNghia;
+    TextView tvAudioStatus;
     Spinner spnTuLoai;
-    final String DATABASE_NAME = "HocNgonNgu.db";
     final int REQUEST_CHOOSE_PHOTO = 321;
-    SQLiteDatabase database;
+    final int REQUEST_CHOOSE_AUDIO = 322;
+    QuestionRepository repository;
+    SupabaseStorageRepository storageRepository;
+    AudioPreviewPlayer audioPreviewPlayer;
+    AlertDialog loadingDialog;
+    ArrayList<String> listTuLoai = new ArrayList<>();
     int idBTV = 0;
-    ArrayList<String> listTuLoai = new ArrayList<>();;
+    Uri imageUri;
+    Uri audioUri;
+    boolean saving = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_tuvung);
+        imgBack = findViewById(R.id.imgBackAddTV);
+        imgHinh = findViewById(R.id.imgHinhAddTV);
+        imgAdd = findViewById(R.id.imgAddTV);
+        btnChonHinh = findViewById(R.id.btnChonHinhAddTV);
+        btnChonAudio = findViewById(R.id.btnChonAudioAddTV);
+        btnPlayAudio = findViewById(R.id.btnPlayAudioAddTV);
+        edtTuVung = findViewById(R.id.edtTuVungAddTV);
+        edtNghia = findViewById(R.id.edtNghiaAddTV);
+        tvAudioStatus = findViewById(R.id.tvAudioStatusAddTV);
+        spnTuLoai = findViewById(R.id.spnLoaiTuAddTV);
+        repository = QuestionRepository.getInstance();
+        storageRepository = SupabaseStorageRepository.getInstance();
+        audioPreviewPlayer = new AudioPreviewPlayer(this);
+        audioPreviewPlayer.setOnStateListener(new AudioPreviewPlayer.OnStateListener() {
+            @Override
+            public void onStateChanged(boolean playing) {
+                btnPlayAudio.setImageResource(playing
+                        ? R.drawable.ic_stop
+                        : R.drawable.ic_play_arrow);
+                tvAudioStatus.setText(playing
+                        ? R.string.form_audio_playing
+                        : audioUri != null ? R.string.form_audio_selected : R.string.form_audio_none);
+            }
 
-        imgBack = (ImageView) findViewById(R.id.imgBackAddTV);
-        imgHinh = (ImageView) findViewById(R.id.imgHinhAddTV);
-        imgAdd = (ImageView) findViewById(R.id.imgAddTV);
-        btnChonHinh = (Button) findViewById(R.id.btnChonHinhAddTV);
-        edtTuVung = (EditText) findViewById(R.id.edtTuVungAddTV);
-        edtNghia = (EditText) findViewById(R.id.edtNghiaAddTV);
-        edtAudio = (EditText) findViewById(R.id.edtAudioAddTV);
-        spnTuLoai = (Spinner) findViewById(R.id.spnLoaiTuAddTV);
-
+            @Override
+            public void onError() {
+                UiFeedback.showTransient(AddTuVungActivity.this,
+                        getString(R.string.form_audio_error), false);
+            }
+        });
         listTuLoai.add("Danh từ");
         listTuLoai.add("Động từ");
         listTuLoai.add("Tính từ");
         listTuLoai.add("Trạng từ");
         listTuLoai.add("Giới từ");
-        ArrayAdapter tuLoaiAdapter = new ArrayAdapter(AddTuVungActivity.this,
+        ArrayAdapter<String> tuLoaiAdapter = new ArrayAdapter<>(AddTuVungActivity.this,
                 R.layout.support_simple_spinner_dropdown_item, listTuLoai);
         spnTuLoai.setAdapter(tuLoaiAdapter);
         idBTV = getIntent().getIntExtra("idBoTuVung", -1);
@@ -68,68 +95,115 @@ public class AddTuVungActivity extends AppCompatActivity {
                 choosePhoto();
             }
         });
+        btnChonAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chooseAudio();
+            }
+        });
+        btnPlayAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioPreviewPlayer.toggle(audioUri);
+            }
+        });
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(AddTuVungActivity.this, AdminTuVungActivity.class);
-                intent.putExtra("idBoTuVung", idBTV);
-                finishAffinity();
-                startActivity(intent);
+                finish();
             }
         });
         imgAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String dapan = edtTuVung.getText().toString().trim();
-                String nghia = edtNghia.getText().toString().trim();
-                String audio = edtAudio.getText().toString().trim();
-
-                Integer indexValue = spnTuLoai.getSelectedItemPosition();
-                String loaitu = listTuLoai.get(indexValue);
-
-                if (dapan.equals("") || nghia.equals("") || audio.equals("") || loaitu.equals("") || imgHinh.getDrawable() == null) {
-                    Toast.makeText(AddTuVungActivity.this, "Chưa điền đầy thông tin", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    byte[] anh = getByteArrayFromImageView();
-
-
-                    Boolean result=false;
-                    if (anh != null && anh.length > 0 ){
-                        result = addTuVung(idBTV, dapan, nghia, loaitu, audio, anh);
-                    }
-
-                    if (result == true) {
-                        Toast.makeText(AddTuVungActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(AddTuVungActivity.this, AdminTuVungActivity.class);
-                        intent.putExtra("idBoTuVung", idBTV);
-                        finishAffinity();
-                        startActivity(intent);
-                    }
-                    else {
-                        Toast.makeText(AddTuVungActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
-                    }
-                }
+                save();
             }
         });
     }
 
-    private Boolean addTuVung(int idbo, String dapan, String nghia, String loaitu, String audio, byte[] anh) {
-        database = Database.initDatabase(AddTuVungActivity.this, DATABASE_NAME);
-        ContentValues values = new ContentValues();
-        values.put("ID_Bo", idbo);
-        values.put("DapAn", dapan);
-        values.put("DichNghia", nghia);
-        values.put("LoaiTu", loaitu);
-        values.put("Audio", audio);
-        values.put("HinhAnh", anh);
-        long result = database.insert("TuVung", null, values);
-        if (result == -1) {
-            return false;
+    private void save() {
+        if (saving) {
+            return;
         }
-        else {
-            return true;
+        String dapan = edtTuVung.getText().toString().trim();
+        String nghia = edtNghia.getText().toString().trim();
+        String loaitu = listTuLoai.get(spnTuLoai.getSelectedItemPosition());
+        if (dapan.isEmpty() || nghia.isEmpty()) {
+            UiFeedback.showTransient(AddTuVungActivity.this,
+                    getString(R.string.feedback_required_fields), false);
+            return;
         }
+        if (imageUri == null) {
+            UiFeedback.showTransient(AddTuVungActivity.this,
+                    getString(R.string.form_image_required), false);
+            return;
+        }
+        if (audioUri == null) {
+            UiFeedback.showTransient(AddTuVungActivity.this,
+                    getString(R.string.form_audio_required), false);
+            return;
+        }
+        saving = true;
+        loadingDialog = UiFeedback.showLoading(this, R.string.feedback_uploading_image);
+        storageRepository.uploadImage(this, imageUri, MediaTypeUtil.PREFIX_VOCABULARY_IMAGES,
+                new SupabaseStorageRepository.UploadCallback() {
+                    @Override
+                    public void onSuccess(String imageUrl) {
+                        UiFeedback.setLoadingMessage(loadingDialog,
+                                R.string.feedback_uploading_audio);
+                        uploadAudio(imageUrl, dapan, nghia, loaitu);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        saving = false;
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showError(AddTuVungActivity.this,
+                                getString(R.string.feedback_upload_failed));
+                    }
+                });
+    }
+
+    private void uploadAudio(String imageUrl, String dapan, String nghia, String loaitu) {
+        storageRepository.uploadAudio(this, audioUri, MediaTypeUtil.PREFIX_VOCABULARY_AUDIO,
+                new SupabaseStorageRepository.UploadCallback() {
+                    @Override
+                    public void onSuccess(String audioUrl) {
+                        UiFeedback.setLoadingMessage(loadingDialog, R.string.feedback_saving);
+                        createTuVung(imageUrl, dapan, nghia, loaitu, audioUrl);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        saving = false;
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showError(AddTuVungActivity.this,
+                                getString(R.string.feedback_upload_failed));
+                    }
+                });
+    }
+
+    private void createTuVung(String imageUrl, String dapan, String nghia,
+                              String loaitu, String audioUrl) {
+        repository.createTuVung(idBTV, dapan, nghia, loaitu, audioUrl, imageUrl,
+                new QuestionRepository.DataCallback<Integer>() {
+                    @Override
+                    public void onSuccess(Integer data) {
+                        saving = false;
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showTransient(AddTuVungActivity.this,
+                                getString(R.string.feedback_add_success), true);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        saving = false;
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showTransient(AddTuVungActivity.this,
+                                getString(R.string.feedback_add_failed), false);
+                    }
+                });
     }
 
     private void choosePhoto() {
@@ -137,29 +211,37 @@ public class AddTuVungActivity extends AppCompatActivity {
         intent.setType("image/*");
         startActivityForResult(intent, REQUEST_CHOOSE_PHOTO);
     }
-    private byte[] getByteArrayFromImageView() {
-        BitmapDrawable drawable = (BitmapDrawable) imgHinh.getDrawable();
-        Bitmap bmp = drawable.getBitmap();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] bytes = stream.toByteArray();
-        return bytes;
+
+    private void chooseAudio() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent, REQUEST_CHOOSE_AUDIO);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_CHOOSE_PHOTO) {
-                try {
-                    Uri imageUri = data.getData();
-                    InputStream is = getContentResolver().openInputStream(imageUri);
-                    Bitmap bmp = BitmapFactory.decodeStream(is);
-                    imgHinh.setImageBitmap(bmp);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            return;
         }
+        if (requestCode == REQUEST_CHOOSE_PHOTO) {
+            imageUri = data.getData();
+            Glide.with(this).load(imageUri).into(imgHinh);
+        } else if (requestCode == REQUEST_CHOOSE_AUDIO) {
+            audioPreviewPlayer.stop();
+            audioUri = data.getData();
+            btnPlayAudio.setImageResource(R.drawable.ic_play_arrow);
+            tvAudioStatus.setText(R.string.form_audio_selected);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (audioPreviewPlayer != null) {
+            audioPreviewPlayer.release();
+        }
+        UiFeedback.dismiss(loadingDialog);
     }
 }

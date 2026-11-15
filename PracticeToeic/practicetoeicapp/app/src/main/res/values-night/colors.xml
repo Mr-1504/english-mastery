@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_primary">#91CEF5</color>
+    <color name="app_on_primary">#003450</color>
+    <color name="app_primary_container">#004C74</color>
+    <color name="app_on_primary_container">#CBE6FF</color>
+
+    <color name="app_secondary">#A8D0B9</color>
+    <color name="app_on_secondary">#133728</color>
+    <color name="app_secondary_container">#2B4E3E</color>
+    <color name="app_on_secondary_container">#C4ECCF</color>
+
+    <color name="app_tertiary">#FFB594</color>
+    <color name="app_on_tertiary">#552005</color>
+    <color name="app_tertiary_container">#70371C</color>
+    <color name="app_on_tertiary_container">#FFDBCC</color>
+
+    <color name="app_error">#FFB4AB</color>
+    <color name="app_on_error">#690005</color>
+    <color name="app_error_container">#93000A</color>
+    <color name="app_on_error_container">#FFDAD6</color>
+
+    <color name="app_success">#7DD3A8</color>
+    <color name="app_on_success">#003824</color>
+
+    <color name="app_surface">#121415</color>
+    <color name="app_on_surface">#E1E3E4</color>
+    <color name="app_surface_variant">#404446</color>
+    <color name="app_on_surface_variant">#C0C4C5</color>
+    <color name="app_surface_card">#1A1D1E</color>
+    <color name="app_surface_muted">#202426</color>
+    <color name="app_outline">#8A9294</color>
+    <color name="app_outline_variant">#404446</color>
+</resources>

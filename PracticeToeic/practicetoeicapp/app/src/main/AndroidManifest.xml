@@ -81,7 +81,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".notify.MyService"/>
+        <service
+            android:name=".notify.MyService"
+            android:foregroundServiceType="shortService" />
         <receiver android:name=".notify.MyReceiver"/>
     </application>
 
