@@ -102,7 +102,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Unsupported content type" }, 400);
     }
 
-    const isAvatarUpload = path.startsWith(`avatars/${uid}/`);
+    const isAvatarUpload = path.startsWith("avatars/");
     if (!isAvatarUpload && !(await isAdmin(uid, idToken))) {
       return json({ error: "Admin access required" }, 403);
     }

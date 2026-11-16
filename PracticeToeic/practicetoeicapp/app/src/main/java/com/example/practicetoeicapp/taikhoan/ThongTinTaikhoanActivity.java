@@ -25,6 +25,7 @@ import com.example.practicetoeicapp.data.SupabaseStorageRepository;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.ui.UiFeedback;
+import com.example.practicetoeicapp.util.AppLogger;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -164,6 +165,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 String url = snapshot.getValue(String.class);
+                AppLogger.d("ThongTinTK", "loadAvatar url=" + url);
                 if (user != null) {
                     user.setAvatarUrl(url);
                 }
@@ -172,6 +174,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError error) {
+                AppLogger.e("ThongTinTK", "loadAvatar cancelled: " + error.getMessage(), error.toException());
             }
         });
     }
@@ -193,11 +196,16 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     }
 
     private void onAvatarPicked(Uri uri) {
-        if (uri == null || iduser == null) return;
+        if (uri == null || iduser == null) {
+            AppLogger.e("ThongTinTK", "onAvatarPicked skipped: uri=" + uri + ", iduser=" + iduser);
+            return;
+        }
+        AppLogger.d("ThongTinTK", "onAvatarPicked uri=" + uri);
         try {
             getContentResolver().takePersistableUriPermission(uri,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            AppLogger.d("ThongTinTK", "persist uri permission not granted: " + e.getMessage());
         }
         loadingDialog = UiFeedback.showLoading(this, R.string.feedback_uploading_image);
         String prefix = MediaTypeUtil.PREFIX_AVATARS + iduser + "/";
@@ -205,6 +213,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
                 new SupabaseStorageRepository.UploadCallback() {
                     @Override
                     public void onSuccess(String publicUrl) {
+                        AppLogger.d("ThongTinTK", "avatar upload success: " + publicUrl);
                         UiFeedback.dismiss(loadingDialog);
                         DB.capnhatAvatar(iduser, publicUrl);
                         if (user != null) {
@@ -217,6 +226,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Exception e) {
+                        AppLogger.e("ThongTinTK", "avatar upload failed", e);
                         UiFeedback.dismiss(loadingDialog);
                         String msg = getString(R.string.profile_avatar_update_failed);
                         if (e != null && e.getMessage() != null && !e.getMessage().isEmpty()) {
