@@ -44,8 +44,8 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     String iduser;
     User user;
     private AlertDialog loadingDialog;
-    private final ActivityResultLauncher<String> pickAvatarLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onAvatarPicked);
+    private final ActivityResultLauncher<String[]> pickAvatarLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), this::onAvatarPicked);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,7 +101,7 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         imageViewProfile = findViewById(R.id.imageViewProfile);
 
         tvEmail.setEnabled(false);
-        imageViewProfile.setOnClickListener(v -> pickAvatarLauncher.launch("image/*"));
+        imageViewProfile.setOnClickListener(v -> pickAvatarLauncher.launch(new String[]{"image/*"}));
 
     }
     private void CapNhatThongTin()
@@ -193,7 +193,12 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     }
 
     private void onAvatarPicked(Uri uri) {
-        if (uri == null) return;
+        if (uri == null || iduser == null) return;
+        try {
+            getContentResolver().takePersistableUriPermission(uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (Exception ignored) {
+        }
         loadingDialog = UiFeedback.showLoading(this, R.string.feedback_uploading_image);
         String prefix = MediaTypeUtil.PREFIX_AVATARS + iduser + "/";
         SupabaseStorageRepository.getInstance().uploadImage(this, uri, prefix,
