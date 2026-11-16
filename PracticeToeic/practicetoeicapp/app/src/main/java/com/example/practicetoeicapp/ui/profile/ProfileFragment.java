@@ -8,11 +8,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.BuildConfig;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
@@ -25,6 +27,11 @@ import com.example.practicetoeicapp.theme.ThemePrefs;
 import com.example.practicetoeicapp.ui.UiFeedback;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Locale;
 
@@ -41,6 +48,7 @@ public class ProfileFragment extends Fragment {
     private TextView tvRole;
     private TextView tvThemeValue;
     private TextView profileAvatar;
+    private ImageView imgProfileAvatar;
     private TextView tvAppVersion;
     private TextView tvBuildTime;
     private View rowAdmin;
@@ -60,6 +68,7 @@ public class ProfileFragment extends Fragment {
         tvRole = root.findViewById(R.id.tvRole);
         tvThemeValue = root.findViewById(R.id.tvThemeValue);
         profileAvatar = root.findViewById(R.id.profileAvatar);
+        imgProfileAvatar = root.findViewById(R.id.imgProfileAvatar);
         tvAppVersion = root.findViewById(R.id.tvAppVersion);
         tvBuildTime = root.findViewById(R.id.tvBuildTime);
         rowAdmin = root.findViewById(R.id.rowAdmin);
@@ -130,7 +139,9 @@ public class ProfileFragment extends Fragment {
         tvProfileName.setText(displayName);
         tvProfileEmail.setText(displayEmail);
         tvProfilePoint.setText(String.valueOf(point));
-        profileAvatar.setText(displayName.substring(0, 1).toUpperCase(Locale.getDefault()));
+        String initial = displayName.substring(0, 1).toUpperCase(Locale.getDefault());
+        profileAvatar.setText(initial);
+        loadAvatar(initial);
 
         String roleLabel = role == 0
                 ? getString(R.string.profile_admin)
@@ -141,6 +152,32 @@ public class ProfileFragment extends Fragment {
         boolean isAdmin = role == 0;
         rowAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
         dividerAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+    }
+
+    private void loadAvatar(String initial) {
+        if (DB == null || DB.iduser == null) return;
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("User")
+                .child(DB.iduser).child("avatarUrl");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (!isAdded() || profileAvatar == null || imgProfileAvatar == null) return;
+                String url = snapshot.getValue(String.class);
+                if (url != null && !url.trim().isEmpty()) {
+                    profileAvatar.setVisibility(View.GONE);
+                    imgProfileAvatar.setVisibility(View.VISIBLE);
+                    Glide.with(ProfileFragment.this).load(url).circleCrop().into(imgProfileAvatar);
+                } else {
+                    imgProfileAvatar.setVisibility(View.GONE);
+                    profileAvatar.setVisibility(View.VISIBLE);
+                    profileAvatar.setText(initial);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+            }
+        });
     }
 
     private void confirmLogout() {

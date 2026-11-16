@@ -3,6 +3,7 @@ package com.example.practicetoeicapp.taikhoan;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -10,14 +11,25 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.MainActivity;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
+import com.example.practicetoeicapp.data.MediaTypeUtil;
+import com.example.practicetoeicapp.data.SupabaseStorageRepository;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.ui.UiFeedback;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 
 public class ThongTinTaikhoanActivity extends AppCompatActivity {
@@ -25,12 +37,15 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
     final  String DATABASE_NAME = "HocNgonNgu.db";
     DatabaseAccess DB;
     SQLiteDatabase database;
-    ImageView imghome;
+    ImageView imghome, imageViewProfile;
     EditText tvHoten,tvEmail,tvSdt;
     TextView tvtaikhoan, tvTen,tvPoint;
     Button btnCapNhat;
     String iduser;
     User user;
+    private AlertDialog loadingDialog;
+    private final ActivityResultLauncher<String> pickAvatarLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onAvatarPicked);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,8 +98,10 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         tvPoint = findViewById(R.id.textviewPoint);
         btnCapNhat = findViewById(R.id.buttonCapNhat);
         imghome = findViewById(R.id.imgHOME);
+        imageViewProfile = findViewById(R.id.imageViewProfile);
 
         tvEmail.setEnabled(false);
+        imageViewProfile.setOnClickListener(v -> pickAvatarLauncher.launch("image/*"));
 
     }
     private void CapNhatThongTin()
@@ -137,7 +154,69 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
         } finally {
             cursor.close();
         }
+        loadAvatarFromFirebase();
+    }
 
+    private void loadAvatarFromFirebase() {
+        if (iduser == null) return;
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("User").child(iduser).child("avatarUrl");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                String url = snapshot.getValue(String.class);
+                if (user != null) {
+                    user.setAvatarUrl(url);
+                }
+                bindAvatar(url);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+            }
+        });
+    }
+
+    private void bindAvatar(String url) {
+        if (imageViewProfile == null) return;
+        if (url != null && !url.trim().isEmpty()) {
+            imageViewProfile.setPadding(0, 0, 0, 0);
+            imageViewProfile.setImageTintList(null);
+            Glide.with(this).load(url).circleCrop().placeholder(R.drawable.ic_profile).into(imageViewProfile);
+        } else {
+            int padding = (int) (16 * getResources().getDisplayMetrics().density);
+            imageViewProfile.setPadding(padding, padding, padding, padding);
+            imageViewProfile.setImageTintList(android.content.res.ColorStateList.valueOf(
+                    getColor(R.color.app_primary)));
+            Glide.with(this).clear(imageViewProfile);
+            imageViewProfile.setImageResource(R.drawable.ic_profile);
+        }
+    }
+
+    private void onAvatarPicked(Uri uri) {
+        if (uri == null) return;
+        loadingDialog = UiFeedback.showLoading(this, R.string.feedback_uploading_image);
+        String prefix = MediaTypeUtil.PREFIX_AVATARS + iduser + "/";
+        SupabaseStorageRepository.getInstance().uploadImage(this, uri, prefix,
+                new SupabaseStorageRepository.UploadCallback() {
+                    @Override
+                    public void onSuccess(String publicUrl) {
+                        UiFeedback.dismiss(loadingDialog);
+                        DB.capnhatAvatar(iduser, publicUrl);
+                        if (user != null) {
+                            user.setAvatarUrl(publicUrl);
+                        }
+                        bindAvatar(publicUrl);
+                        UiFeedback.showTransient(ThongTinTaikhoanActivity.this,
+                                getString(R.string.profile_avatar_updated), true);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        UiFeedback.dismiss(loadingDialog);
+                        UiFeedback.showError(ThongTinTaikhoanActivity.this,
+                                getString(R.string.profile_avatar_update_failed));
+                    }
+                });
     }
 
 
