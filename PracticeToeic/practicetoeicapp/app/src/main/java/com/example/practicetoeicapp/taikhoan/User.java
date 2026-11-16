@@ -7,6 +7,7 @@ public class User {
     private String Email;
     private String SDT;
     private int Role;
+    private String avatarUrl;
 
     public User() {
         //Nhận data từ Firebase
@@ -67,5 +68,13 @@ public class User {
 
     public void setRole(int role) {
         Role = role;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

@@ -59,17 +59,31 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvAvatar"
+                <FrameLayout
                     android:layout_width="@dimen/avatar_size"
                     android:layout_height="@dimen/avatar_size"
-                    android:layout_marginStart="@dimen/card_gap"
-                    android:background="@drawable/bg_avatar"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="center"
-                    android:text="A"
-                    android:textColor="@color/app_primary"
-                    android:textSize="18sp" />
+                    android:layout_marginStart="@dimen/card_gap">
+
+                    <ImageView
+                        android:id="@+id/imgAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_avatar"
+                        android:contentDescription="@null"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_avatar"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="A"
+                        android:textColor="@color/app_primary"
+                        android:textSize="18sp" />
+                </FrameLayout>
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView

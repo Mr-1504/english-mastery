@@ -11,6 +11,7 @@ const ALLOWED_PREFIXES = [
   "listening/audio/",
   "vocabulary/images/",
   "vocabulary/audio/",
+  "avatars/",
 ];
 
 const ALLOWED_CONTENT_TYPES = new Set([
@@ -86,9 +87,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const uid = await verifyFirebaseToken(idToken);
-    if (!(await isAdmin(uid, idToken))) {
-      return json({ error: "Admin access required" }, 403);
-    }
 
     const body = await req.json().catch(() => ({}));
     const path = String(body.path ?? "");
@@ -102,6 +100,11 @@ Deno.serve(async (req: Request) => {
     }
     if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
       return json({ error: "Unsupported content type" }, 400);
+    }
+
+    const isAvatarUpload = path.startsWith("avatars/");
+    if (!isAvatarUpload && !(await isAdmin(uid, idToken))) {
+      return json({ error: "Admin access required" }, 403);
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {

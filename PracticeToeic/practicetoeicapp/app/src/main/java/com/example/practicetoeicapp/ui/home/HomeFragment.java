@@ -7,17 +7,24 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.bumptech.glide.Glide;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.database.Database;
 import com.example.practicetoeicapp.database.DatabaseAccess;
 import com.example.practicetoeicapp.hoctuvung.HocTuVungActivity;
 import com.example.practicetoeicapp.taikhoan.RankingActivity;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Locale;
 
@@ -28,6 +35,7 @@ public class HomeFragment extends Fragment {
     private SQLiteDatabase database;
     private TextView tvGreeting;
     private TextView tvAvatar;
+    private ImageView imgAvatar;
     private TextView tvPoint;
 
     @Override
@@ -38,6 +46,7 @@ public class HomeFragment extends Fragment {
 
         tvGreeting = root.findViewById(R.id.tvGreeting);
         tvAvatar = root.findViewById(R.id.tvAvatar);
+        imgAvatar = root.findViewById(R.id.imgAvatar);
         tvPoint = root.findViewById(R.id.tvPoint);
 
         root.findViewById(R.id.btnStartPractice).setOnClickListener(v ->
@@ -80,6 +89,34 @@ public class HomeFragment extends Fragment {
         String firstName = displayName.split("\\s+")[0];
         tvGreeting.setText(getString(R.string.learn_greeting, firstName));
         tvPoint.setText(String.valueOf(point));
-        tvAvatar.setText(firstName.substring(0, 1).toUpperCase(Locale.getDefault()));
+        String initial = firstName.substring(0, 1).toUpperCase(Locale.getDefault());
+        tvAvatar.setText(initial);
+        loadAvatar(initial);
+    }
+
+    private void loadAvatar(String initial) {
+        if (DB == null || DB.iduser == null) return;
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("User")
+                .child(DB.iduser).child("avatarUrl");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (!isAdded() || imgAvatar == null || tvAvatar == null) return;
+                String url = snapshot.getValue(String.class);
+                if (url != null && !url.trim().isEmpty()) {
+                    tvAvatar.setVisibility(View.GONE);
+                    imgAvatar.setVisibility(View.VISIBLE);
+                    Glide.with(HomeFragment.this).load(url).circleCrop().into(imgAvatar);
+                } else {
+                    imgAvatar.setVisibility(View.GONE);
+                    tvAvatar.setVisibility(View.VISIBLE);
+                    tvAvatar.setText(initial);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+            }
+        });
     }
 }

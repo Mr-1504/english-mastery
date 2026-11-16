@@ -180,6 +180,12 @@ public class DatabaseAccess {
         }
     }
 
+    public void capnhatAvatar(String iduser, String avatarUrl) {
+        rootNode = FirebaseDatabase.getInstance();
+        userref = rootNode.getReference("User").child(iduser);
+        userref.child("avatarUrl").setValue(avatarUrl);
+    }
+
     public Boolean capnhatdiem(String iduser,int Point, int PointPlus){
 
         //Cập Nhật User lên FireBase
