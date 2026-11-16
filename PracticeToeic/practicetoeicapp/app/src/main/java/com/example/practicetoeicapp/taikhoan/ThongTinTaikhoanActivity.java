@@ -218,8 +218,11 @@ public class ThongTinTaikhoanActivity extends AppCompatActivity {
                     @Override
                     public void onError(Exception e) {
                         UiFeedback.dismiss(loadingDialog);
-                        UiFeedback.showError(ThongTinTaikhoanActivity.this,
-                                getString(R.string.profile_avatar_update_failed));
+                        String msg = getString(R.string.profile_avatar_update_failed);
+                        if (e != null && e.getMessage() != null && !e.getMessage().isEmpty()) {
+                            msg = msg + ": " + e.getMessage();
+                        }
+                        UiFeedback.showError(ThongTinTaikhoanActivity.this, msg);
                     }
                 });
     }
