@@ -10,6 +10,7 @@ public final class MediaTypeUtil {
     public static final String PREFIX_LISTENING_AUDIO = "listening/audio/";
     public static final String PREFIX_VOCABULARY_IMAGES = "vocabulary/images/";
     public static final String PREFIX_VOCABULARY_AUDIO = "vocabulary/audio/";
+    public static final String PREFIX_AVATARS = "avatars/";
 
     private MediaTypeUtil() {
     }
