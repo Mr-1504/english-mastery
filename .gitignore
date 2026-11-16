@@ -59,3 +59,7 @@ yarn-error.log*
 # Backups
 *.bak
 *.bk
+
+# Release tooling
+/node_modules/
+/package-lock.json

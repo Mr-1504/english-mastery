@@ -13,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.example.practicetoeicapp.BuildConfig;
 import com.example.practicetoeicapp.R;
 import com.example.practicetoeicapp.admin.AdminActivity;
 import com.example.practicetoeicapp.database.Database;
@@ -40,6 +41,8 @@ public class ProfileFragment extends Fragment {
     private TextView tvRole;
     private TextView tvThemeValue;
     private TextView profileAvatar;
+    private TextView tvAppVersion;
+    private TextView tvBuildTime;
     private View rowAdmin;
     private View dividerAdmin;
     private int role;
@@ -57,6 +60,8 @@ public class ProfileFragment extends Fragment {
         tvRole = root.findViewById(R.id.tvRole);
         tvThemeValue = root.findViewById(R.id.tvThemeValue);
         profileAvatar = root.findViewById(R.id.profileAvatar);
+        tvAppVersion = root.findViewById(R.id.tvAppVersion);
+        tvBuildTime = root.findViewById(R.id.tvBuildTime);
         rowAdmin = root.findViewById(R.id.rowAdmin);
         dividerAdmin = root.findViewById(R.id.dividerAdmin);
 
@@ -71,6 +76,7 @@ public class ProfileFragment extends Fragment {
                 startActivity(new Intent(requireContext(), AdminActivity.class)));
         root.findViewById(R.id.btnLogout).setOnClickListener(v -> confirmLogout());
 
+        bindBuildInfo();
         return root;
     }
 
@@ -87,6 +93,16 @@ public class ProfileFragment extends Fragment {
         }
         String label = ThemePrefs.getModeLabel(requireContext(), ThemePrefs.getMode(requireContext()));
         tvThemeValue.setText(getString(R.string.theme_current, label));
+    }
+
+    private void bindBuildInfo() {
+        if (tvAppVersion != null) {
+            tvAppVersion.setText(getString(R.string.profile_version,
+                    BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
+        }
+        if (tvBuildTime != null) {
+            tvBuildTime.setText(getString(R.string.profile_build_time, BuildConfig.BUILD_TIME));
+        }
     }
 
     private void loadUser() {
