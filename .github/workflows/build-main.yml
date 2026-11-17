@@ -2,7 +2,6 @@ name: Build and Distribute
 
 on:
   push:
-    branches: [main]
     tags: ['v*']
   workflow_dispatch:
 
@@ -16,6 +15,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Job-level env: a step's own env is not available in that step's `if`.
+    env:
+      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
     defaults:
       run:
         working-directory: PracticeToeic/practicetoeicapp
@@ -24,6 +26,20 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          # `tools` was removed from the SDK repository; keep the default package list lean.
+          packages: platform-tools
+          # Reuse the cmdline-tools (16.0) already present on the runner when possible.
+          cmdline-tools-version: 12266719
 
       - name: Restore google-services.json
         env:
@@ -42,20 +58,11 @@ jobs:
           SUPABASE_MEDIA_BUCKET: ${{ secrets.SUPABASE_MEDIA_BUCKET }}
         run: |
           cat > local.properties <<EOF
-          sdk.dir=$ANDROID_SDK_ROOT
+          sdk.dir=${ANDROID_SDK_ROOT:-$ANDROID_HOME}
           SUPABASE_URL=${SUPABASE_URL}
           SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
           SUPABASE_MEDIA_BUCKET=${SUPABASE_MEDIA_BUCKET:-media}
           EOF
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -70,15 +77,26 @@ jobs:
         working-directory: ${{ github.workspace }}
         shell: bash
         run: |
-          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' PracticeToeic/practicetoeicapp/app/build.gradle | head -n1)
-          TAG="v${VERSION_NAME}"
+          if [[ "${GITHUB_REF}" != refs/tags/v* ]]; then
+            echo "::error::This workflow only builds tags matching v* (got ${GITHUB_REF})"
+            exit 1
+          fi
+          TAG="${GITHUB_REF_NAME}"
+          VERSION_NAME="${TAG#v}"
+          GRADLE_VERSION=$(grep -oP 'versionName\s+"\K[^"]+' PracticeToeic/practicetoeicapp/app/build.gradle | head -n1)
+          if [ "$GRADLE_VERSION" != "$VERSION_NAME" ]; then
+            echo "::error::Tag ${TAG} does not match versionName ${GRADLE_VERSION} in app/build.gradle"
+            exit 1
+          fi
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           NOTES_FILE="$RUNNER_TEMP/release_notes.md"
-          awk -v tag="## [${VERSION_NAME}]" 'found && /^## \[/ {exit} $0 ~ "^## \\["tag {found=1; next} $0 ~ "^## \\["VERSION_NAME {found=1; next} found {print}' CHANGELOG.md > "$NOTES_FILE" || true
-          if [ ! -s "$NOTES_FILE" ]; then
-            awk -v ver="${VERSION_NAME}" 'found && /^## / {exit} index($0, "## " ver)==1 {found=1; next} index($0, "## [" ver)==1 {found=1; next} found {print}' CHANGELOG.md > "$NOTES_FILE" || true
-          fi
+          awk -v ver="${VERSION_NAME}" '
+            found && /^## / { exit }
+            index($0, "## [" ver "]") == 1 { found=1; next }
+            index($0, "## " ver) == 1 { found=1; next }
+            found { print }
+          ' CHANGELOG.md > "$NOTES_FILE" || true
           if [ ! -s "$NOTES_FILE" ]; then
             echo "Release ${TAG}" > "$NOTES_FILE"
           fi
@@ -93,10 +111,8 @@ jobs:
       - name: Distribute to Firebase App Distribution
         if: ${{ env.FIREBASE_APP_ID != '' }}
         uses: wzieba/Firebase-Distribution-Github-Action@v1
-        env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
         with:
-          appId: ${{ secrets.FIREBASE_APP_ID }}
+          appId: ${{ env.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: ${{ secrets.FIREBASE_TESTER_GROUPS }}
           file: PracticeToeic/practicetoeicapp/app/build/outputs/apk/debug/app-debug.apk
