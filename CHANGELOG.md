@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1](https://github.com/Mr-1504/english-mastery/compare/v1.1.0...v1.1.1) (2026-11-17)
+
+
+### Chores
+
+* merge release into main ([d7d1510](https://github.com/Mr-1504/english-mastery/commit/d7d15106da963fbb669b19b0568acf06ce5f179f))
+* sync main into release ([26175bd](https://github.com/Mr-1504/english-mastery/commit/26175bdfc2a55a0dc60fed3c3b9182b7abc7ef69))
+
 ## 1.1.0 (2026-11-17)
 
 
