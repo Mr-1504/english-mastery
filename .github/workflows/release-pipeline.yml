@@ -1,0 +1,52 @@
+name: Release Pipeline
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [release]
+
+concurrency:
+  group: release-${{ github.event.pull_request.base.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release
+        uses: actions/checkout@v4
+        with:
+          ref: release
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install release tools
+        run: npm install
+
+      - name: Bump version and generate changelog
+        run: npx commit-and-tag-version
+
+      - name: Push release commit and tags
+        run: git push origin HEAD:release --follow-tags
+
+      - name: Merge release into main
+        run: |
+          git fetch origin main
+          git checkout main
+          git merge --no-ff origin/release -m "chore: merge release into main"
+          git push origin main

@@ -17,14 +17,17 @@ android {
         applicationId "com.example.practicetoeicapp"
         minSdk 27
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        def buildTime = new Date().format("yyyy-MM-dd HH:mm 'UTC'", TimeZone.getTimeZone("UTC"))
 
         buildConfigField "String", "SUPABASE_URL", "\"${localProperties.getProperty('SUPABASE_URL', '')}\""
         buildConfigField "String", "SUPABASE_ANON_KEY", "\"${localProperties.getProperty('SUPABASE_ANON_KEY', '')}\""
         buildConfigField "String", "SUPABASE_MEDIA_BUCKET", "\"${localProperties.getProperty('SUPABASE_MEDIA_BUCKET', 'media')}\""
+        buildConfigField "String", "BUILD_TIME", "\"${buildTime}\""
     }
 
     buildFeatures {
