@@ -9,10 +9,10 @@ body:
     attributes:
       label: Priority
       options:
-        - P0 - Highest
-        - P1 - High
-        - P2 - Medium
-        - P3 - Low
+        - Highest
+        - High
+        - Medium
+        - Low
     validations:
       required: true
 
@@ -22,4 +22,4 @@ body:
       label: Mục tiêu & Yêu cầu chi tiết
       description: Mô tả rõ đầu ra (Acceptance Criteria) của task này
     validations:
-      required: true
+      required: false
