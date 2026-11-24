@@ -1,0 +1,25 @@
+name: Task / Feature
+description: Tạo công việc mới hoặc tính năng cần phát triển
+title: "[Task]: "
+labels: ["enhancement"]
+projects: ["<ORG-HOAC-USERNAME>/<SO-PROJECT>"] # VD: Mr-1504/1
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 - Highest
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Mục tiêu & Yêu cầu chi tiết
+      description: Mô tả rõ đầu ra (Acceptance Criteria) của task này
+    validations:
+      required: true
