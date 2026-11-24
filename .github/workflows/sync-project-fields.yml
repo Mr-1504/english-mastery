@@ -1,31 +1,127 @@
-name: Sync Issue Priority to Project
+name: Auto-fill Priority and Current Sprint
 
 on:
   issues:
     types: [opened, edited]
 
-permissions:
-  issues: read
-  repository-projects: write
-
 jobs:
-  sync-priority:
+  sync-fields:
     runs-on: ubuntu-latest
     steps:
-      - name: Extract Priority from Issue Body
-        id: parse
+      - name: Sync Priority and Sprint via GraphQL
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.PROJECT_PAT }}
           script: |
             const body = context.payload.issue.body || '';
-            const match = body.match(/### Priority\s+([^\r\n]+)/);
-            if (match && match[1]) {
-              core.setOutput('priority', match[1].trim());
+            const priorityMatch = body.match(/### Priority\s+([^\r\n]+)/);
+            const selectedPriority = priorityMatch ? priorityMatch[1].trim() : null;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = context.issue.number;
+
+            const query = `
+              query($owner: String!, $repo: String!, $number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $number) {
+                    id
+                    projectItems(first: 10) {
+                      nodes {
+                        id
+                        project {
+                          id
+                          title
+                          fields(first: 20) {
+                            nodes {
+                              ... on ProjectV2FieldCommon {
+                                id
+                                name
+                                dataType
+                              }
+                              ... on ProjectV2SingleSelectField {
+                                id
+                                name
+                                options { id name }
+                              }
+                              ... on ProjectV2IterationField {
+                                id
+                                name
+                                configuration {
+                                  iterations { id title startDate duration }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            // Đợi tối đa 15s nếu auto-add-to-project chưa kịp thêm issue vào board
+            let targetItem = null;
+            for (let attempt = 1; attempt <= 5; attempt++) {
+              const result = await github.graphql(query, { owner, repo, number: issueNumber });
+              const projectItems = result.repository.issue.projectItems.nodes;
+              targetItem = projectItems.find(item => item.project.title === 'English Mastery');
+              if (targetItem) break;
+              console.log(`Lần ${attempt}: Đang đợi Issue được add vào Project...`);
+              await new Promise(r => setTimeout(r, 3000));
             }
 
-      - name: Update Project Field
-        if: steps.parse.outputs.priority != ''
-        uses: actions/add-to-project@v1.0.2
-        with:
-          project-url: https://github.com/users/<USERNAME>/projects/<SO-PROJECT>
-          github-token: ${{ secrets.PROJECT_PAT }} # Cần tạo Personal Access Token (classic) có quyền 'project'
+            if (!targetItem) {
+              console.log('Không tìm thấy Project English Mastery trên Issue này.');
+              return;
+            }
+
+            const projectId = targetItem.project.id;
+            const itemId = targetItem.id;
+            const fields = targetItem.project.fields.nodes;
+
+            // 1. Cập nhật Priority
+            if (selectedPriority) {
+              const priorityField = fields.find(f => f.name === 'Priority');
+              if (priorityField && priorityField.options) {
+                const option = priorityField.options.find(o => o.name === selectedPriority);
+                if (option) {
+                  await github.graphql(`
+                    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                      updateProjectV2ItemFieldValue(input: {
+                        projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+                        value: { singleSelectOptionId: $optionId }
+                      }) { projectV2Item { id } }
+                    }
+                  `, { projectId, itemId, fieldId: priorityField.id, optionId: option.id });
+                  console.log('Đã gán Priority:', selectedPriority);
+                } else {
+                  console.log('Không khớp option Priority:', selectedPriority);
+                }
+              }
+            }
+
+            // 2. Tự động tìm và gán Sprint hiện tại (Iteration đang active hôm nay)
+            const sprintField = fields.find(f => f.name === 'Sprint');
+            if (sprintField && sprintField.configuration) {
+              const today = new Date();
+              const currentSprint = sprintField.configuration.iterations.find(it => {
+                const start = new Date(it.startDate);
+                const end = new Date(start);
+                end.setDate(start.getDate() + it.duration);
+                return today >= start && today < end;
+              });
+
+              if (currentSprint) {
+                await github.graphql(`
+                  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $iterationId: String!) {
+                    updateProjectV2ItemFieldValue(input: {
+                      projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+                      value: { iterationId: $iterationId }
+                    }) { projectV2Item { id } }
+                  }
+                `, { projectId, itemId, fieldId: sprintField.id, iterationId: currentSprint.id });
+                console.log('Đã gán Sprint hiện tại:', currentSprint.title);
+              }
+            }

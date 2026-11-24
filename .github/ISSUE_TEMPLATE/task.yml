@@ -2,7 +2,7 @@ name: Task / Feature
 description: Tạo công việc mới hoặc tính năng cần phát triển
 title: "[Task]: "
 labels: ["enhancement"]
-projects: ["<ORG-HOAC-USERNAME>/<SO-PROJECT>"] # VD: Mr-1504/1
+projects: ["Mr-1504/6"]
 body:
   - type: dropdown
     id: priority

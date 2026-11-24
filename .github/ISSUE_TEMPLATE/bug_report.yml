@@ -2,7 +2,7 @@ name: Bug Report
 description: Báo cáo lỗi hệ thống hoặc tính năng hoạt động sai
 title: "[Bug]: "
 labels: ["bug"]
-projects: ["<ORG-HOAC-USERNAME>/<SO-PROJECT>"] # VD: Mr-1504/1
+projects: ["Mr-1504/6"]
 body:
   - type: dropdown
     id: priority
